@@ -96,28 +96,31 @@ function extractImageB64FromChat(json: any): string {
     throw new Error("CONTENT_FILTER_TRIGGERED");
 
   const message = choice.message || {};
+
+  // 1. Check message.images array
   if (message.images?.[0]?.image_url?.url) {
-    const match = message.images[0].image_url.url.match(
-      /^data:image\/\w+;base64,(.*)$/s,
-    );
-    if (match) return match[1];
+    const url: string = message.images[0].image_url.url;
+    if (url.startsWith("data:")) return url.split(",")[1] || "";
   }
+
+  // 2. Check message.content array
   if (Array.isArray(message.content)) {
     for (const part of message.content) {
       if (part.type === "image_url" && part.image_url?.url) {
-        const match = part.image_url.url.match(
-          /^data:image\/\w+;base64,(.*)$/s,
-        );
-        if (match) return match[1];
+        const url: string = part.image_url.url;
+        if (url.startsWith("data:")) return url.split(",")[1] || "";
       }
     }
   }
+
+  // 3. Check message.content string
   if (typeof message.content === "string") {
     const match = message.content.match(
-      /data:image\/\w+;base64,([A-Za-z0-9+/=]+)/s,
+      /data:image\/\w+;base64,([A-Za-z0-9+/=]+)/,
     );
     if (match) return match[1];
   }
+
   throw new Error("تصویر خروجی در پاسخ مدل یافت نشد.");
 }
 
