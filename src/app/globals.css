@@ -1,0 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  font-feature-settings: "ss01" on; /* Better Persian typography glyphs */
+}
