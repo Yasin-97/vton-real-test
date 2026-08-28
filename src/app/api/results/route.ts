@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { getStorageDir } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 export async function GET() {
   try {
-    const resultsDir = path.join(process.cwd(), "public", "results");
+    const resultsDir = getStorageDir();
     if (!fs.existsSync(resultsDir)) {
       return NextResponse.json({ sessions: [] });
     }
@@ -35,11 +35,7 @@ export async function GET() {
 
     return NextResponse.json(
       { sessions },
-      {
-        headers: {
-          "Cache-Control": "no-store, max-age=0",
-        },
-      },
+      { headers: { "Cache-Control": "no-store" } },
     );
   } catch (err) {
     return NextResponse.json(

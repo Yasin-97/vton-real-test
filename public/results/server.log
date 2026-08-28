@@ -1,0 +1,5 @@
+[2026-08-28T11:32:15.349Z] [INFO] 👉 POST /api/try-on received from IP: unknown 
+[2026-08-28T11:32:15.362Z] [INFO] Person image verified: ~233 KB 
+[2026-08-28T11:32:15.387Z] [INFO] Calling AvalAI API with model [gpt-image-2]... 
+[2026-08-28T11:33:04.079Z] [INFO] [gpt-image-2] HTTP 200 returned in 48692ms 
+[2026-08-28T11:33:08.086Z] [INFO] 🎉 Try-on succeeded with model [gpt-image-2] in 52738ms 

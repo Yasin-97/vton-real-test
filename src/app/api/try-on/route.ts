@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import { addLog } from "@/lib/logger";
+import { getStorageDir } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
