@@ -379,9 +379,9 @@ export async function POST(req: NextRequest) {
 
           const sessionMeta = {
             id: sessionId,
-            personUrl: `/results/session_${sessionId}_person.jpg`,
-            garmentUrl: `/results/session_${sessionId}_garment.jpg`,
-            resultUrl: `/results/session_${sessionId}_result.png`,
+            personUrl: `/api/media/session_${sessionId}_person.jpg`,
+            garmentUrl: `/api/media/session_${sessionId}_garment.jpg`,
+            resultUrl: `/api/media/session_${sessionId}_result.png`,
             modelUsed: model,
             userKey,
             createdAt: new Date().toISOString(),

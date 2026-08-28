@@ -2,26 +2,36 @@ import fs from "fs";
 import path from "path";
 
 export function getStorageDir(): string {
-  // Use /data if mounted on Darkube, otherwise fallback to local public/results
-  const darkubeDiskPath = "/data";
-  const localResultsPath = path.join(process.cwd(), "public", "results");
+  const possibleDirs = [
+    path.join("/data", "results"),
+    "/data",
+    path.join(process.cwd(), "public", "results"),
+    path.join("/tmp", "results"),
+  ];
 
-  let targetDir = localResultsPath;
-
-  try {
-    if (fs.existsSync(darkubeDiskPath)) {
-      const testDir = path.join(darkubeDiskPath, "results");
-      if (!fs.existsSync(testDir)) fs.mkdirSync(testDir, { recursive: true });
-      targetDir = testDir;
-    } else {
-      if (!fs.existsSync(localResultsPath))
-        fs.mkdirSync(localResultsPath, { recursive: true });
+  for (const dir of possibleDirs) {
+    try {
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      // Test write permission
+      const testFile = path.join(dir, ".write-test");
+      fs.writeFileSync(testFile, "ok");
+      fs.unlinkSync(testFile);
+      return dir;
+    } catch {
+      continue;
     }
-  } catch (err) {
-    targetDir = localResultsPath;
-    if (!fs.existsSync(localResultsPath))
-      fs.mkdirSync(localResultsPath, { recursive: true });
   }
 
-  return targetDir;
+  return path.join(process.cwd(), "public", "results");
+}
+
+export function getAllStorageDirs(): string[] {
+  return [
+    path.join("/data", "results"),
+    "/data",
+    path.join(process.cwd(), "public", "results"),
+    path.join("/tmp", "results"),
+  ].filter((d) => fs.existsSync(d));
 }
