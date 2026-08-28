@@ -163,8 +163,9 @@ function extractImageB64FromChat(json: any): string {
   throw new Error("تصویر خروجی در پاسخ مدل یافت نشد.");
 }
 
-// ----------------- MODEL API CALLER -----------------
+// ----------------- MODEL API CALLER (WITH STAGE-LEVEL TIMING) -----------------
 async function callModelApi(
+  requestId: string,
   model: string,
   personDataUrl: string,
   garmentDataUrl: string,
@@ -176,7 +177,10 @@ async function callModelApi(
   };
   const startTime = Date.now();
 
-  addLog("INFO", `Calling AvalAI API with model [${model}]...`);
+  addLog(
+    "INFO",
+    `[${requestId}] 🚀 Calling AvalAI API with model [${model}]...`,
+  );
 
   if (model.startsWith("gemini")) {
     const payload = {
@@ -205,16 +209,19 @@ async function callModelApi(
       ],
     };
 
+    // ---- sub-stage: network round-trip ----
+    const fetchStart = Date.now();
     const res = await fetch(CHAT_URL, {
       method: "POST",
       headers,
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(90000),
     });
+    const fetchMs = Date.now() - fetchStart;
 
     addLog(
       "INFO",
-      `[${model}] HTTP ${res.status} returned in ${Date.now() - startTime}ms`,
+      `[${requestId}] [${model}] ⏱ network fetch: ${fetchMs}ms → HTTP ${res.status}`,
     );
 
     if (!res.ok) {
@@ -222,8 +229,21 @@ async function callModelApi(
       throw new Error(`HTTP ${res.status}: ${errBody}`);
     }
 
+    // ---- sub-stage: response parse ----
+    const parseStart = Date.now();
     const data = await res.json();
-    return Buffer.from(extractImageB64FromChat(data), "base64");
+    const buffer = Buffer.from(extractImageB64FromChat(data), "base64");
+    addLog(
+      "INFO",
+      `[${requestId}] [${model}] ⏱ JSON parse + decode: ${Date.now() - parseStart}ms`,
+    );
+
+    addLog(
+      "INFO",
+      `[${requestId}] [${model}] ✅ TOTAL model call: ${Date.now() - startTime}ms`,
+    );
+
+    return buffer;
   } else {
     // gpt-image-2 (Edits endpoint)
     const payload = {
@@ -235,16 +255,19 @@ async function callModelApi(
       n: 1,
     };
 
+    // ---- sub-stage: network round-trip ----
+    const fetchStart = Date.now();
     const res = await fetch(EDITS_URL, {
       method: "POST",
       headers,
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(90000),
     });
+    const fetchMs = Date.now() - fetchStart;
 
     addLog(
       "INFO",
-      `[${model}] HTTP ${res.status} returned in ${Date.now() - startTime}ms`,
+      `[${requestId}] [${model}] ⏱ network fetch: ${fetchMs}ms → HTTP ${res.status}`,
     );
 
     if (!res.ok) {
@@ -252,21 +275,48 @@ async function callModelApi(
       throw new Error(`HTTP ${res.status}: ${errBody}`);
     }
 
+    // ---- sub-stage: response parse ----
+    const parseStart = Date.now();
     const data = await res.json();
     const item = data.data?.[0];
+    addLog(
+      "INFO",
+      `[${requestId}] [${model}] ⏱ JSON parse: ${Date.now() - parseStart}ms`,
+    );
 
     if (item?.b64_json) {
+      addLog(
+        "INFO",
+        `[${requestId}] [${model}] ✅ TOTAL model call: ${Date.now() - startTime}ms (inline b64_json, no extra fetch)`,
+      );
       return Buffer.from(item.b64_json, "base64");
     }
 
     if (item?.url) {
       if (item.url.startsWith("data:")) {
+        addLog(
+          "INFO",
+          `[${requestId}] [${model}] ✅ TOTAL model call: ${Date.now() - startTime}ms (inline data URL)`,
+        );
         return Buffer.from(item.url.split(",")[1], "base64");
       }
+
+      // ---- sub-stage: extra image download (this is a common hidden bottleneck) ----
+      const imgFetchStart = Date.now();
       const imgRes = await fetch(item.url, {
         signal: AbortSignal.timeout(30000),
       });
-      return Buffer.from(await imgRes.arrayBuffer());
+      const imgBuffer = Buffer.from(await imgRes.arrayBuffer());
+      addLog(
+        "INFO",
+        `[${requestId}] [${model}] ⏱ extra result-URL download: ${Date.now() - imgFetchStart}ms`,
+      );
+
+      addLog(
+        "INFO",
+        `[${requestId}] [${model}] ✅ TOTAL model call: ${Date.now() - startTime}ms (via URL fetch)`,
+      );
+      return imgBuffer;
     }
 
     throw new Error("خروجی معتبری دریافت نشد.");
@@ -275,43 +325,76 @@ async function callModelApi(
 
 // ----------------- MAIN POST ROUTE -----------------
 export async function POST(req: NextRequest) {
+  const requestId = crypto.randomBytes(4).toString("hex");
   const reqStart = Date.now();
   const today = new Date().toISOString().slice(0, 10);
   const { userKey, newCookie } = getUserKey(req);
 
+  // Per-stage timing table, logged as a single summary line at the end
+  // so the admin panel can show one row with the full breakdown.
+  const stageTimes: Record<string, number> = {};
+  const mark = (label: string, startedAt: number, extra?: string): number => {
+    const ms = Date.now() - startedAt;
+    stageTimes[label] = ms;
+    addLog(
+      "INFO",
+      `[${requestId}] ⏱ ${label}: ${ms}ms${extra ? ` (${extra})` : ""}`,
+    );
+    return ms;
+  };
+
   addLog(
     "INFO",
-    `👉 POST /api/try-on received from IP: ${req.headers.get("x-real-ip") || "unknown"}`,
+    `[${requestId}] 👉 POST /api/try-on received from IP: ${req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for") || "unknown"}`,
   );
 
   try {
     // 1. Check Rate Limits
+    let stageStart = Date.now();
     const limitsData = getLimitsData();
     const userRecord = limitsData[userKey];
     const currentCount =
       userRecord && userRecord.date === today ? userRecord.count : 0;
+    mark("rate-limit-check", stageStart);
 
     if (currentCount >= DAILY_LIMIT) {
-      addLog("WARN", `Rate limit exceeded for user: ${userKey}`);
+      addLog("WARN", `[${requestId}] Rate limit exceeded for user: ${userKey}`);
       return NextResponse.json(
         {
           success: false,
           message:
             "شما به سقف مجاز روزانه (۴ بار پرو در روز) رسیده‌اید. لطفاً فردا مجدداً تلاش کنید.",
           remaining_tries: 0,
+          request_id: requestId,
         },
         { status: 429 },
       );
     }
 
     // 2. Parse & Validate Payload
+    stageStart = Date.now();
+    const contentLengthHeader = req.headers.get("content-length");
     const body = await req.json();
     const { person_image_base64, garment_url, garment_tags } = body;
+    mark(
+      "body-parse",
+      stageStart,
+      contentLengthHeader
+        ? `~${Math.round(Number(contentLengthHeader) / 1024)}KB payload`
+        : "size unknown",
+    );
 
     if (!person_image_base64) {
-      addLog("WARN", "Missing person_image_base64 in request body");
+      addLog(
+        "WARN",
+        `[${requestId}] Missing person_image_base64 in request body`,
+      );
       return NextResponse.json(
-        { success: false, message: "تصویر کاربر الزامی است." },
+        {
+          success: false,
+          message: "تصویر کاربر الزامی است.",
+          request_id: requestId,
+        },
         { status: 400 },
       );
     }
@@ -322,13 +405,16 @@ export async function POST(req: NextRequest) {
     );
 
     // Strictly normalize person image Base64
+    stageStart = Date.now();
     const personDataUrl = cleanAndNormalizeDataUrl(person_image_base64);
-    addLog(
-      "INFO",
-      `Person image verified: ~${Math.round(personDataUrl.length / 1024)} KB`,
+    mark(
+      "person-image-normalize",
+      stageStart,
+      `${Math.round(personDataUrl.length / 1024)}KB`,
     );
 
     // 3. Resolve Garment Image to Base64
+    stageStart = Date.now();
     let garmentDataUrl = "";
     const cleanGarmentPath = (garment_url || "/garments/garment-1.jpg").replace(
       /^\//,
@@ -346,10 +432,11 @@ export async function POST(req: NextRequest) {
         path.extname(cleanGarmentPath).toLowerCase().replace(".", "") || "jpeg";
       const mime = ext === "png" ? "image/png" : "image/jpeg";
       garmentDataUrl = `data:${mime};base64,${gBuf.toString("base64")}`;
+      mark("garment-image-local-read", stageStart, cleanGarmentPath);
     } else {
       addLog(
         "WARN",
-        `Garment not found locally at ${localGarmentPath}, fetching via origin`,
+        `[${requestId}] Garment not found locally at ${localGarmentPath}, fetching via origin`,
       );
       const origin = req.nextUrl.origin;
       const gRes = await fetch(`${origin}/${cleanGarmentPath}`, {
@@ -357,22 +444,30 @@ export async function POST(req: NextRequest) {
       });
       const gBuf = Buffer.from(await gRes.arrayBuffer());
       garmentDataUrl = `data:image/jpeg;base64,${gBuf.toString("base64")}`;
+      mark("garment-image-remote-fetch", stageStart, cleanGarmentPath);
     }
 
     let lastError = "";
 
     // 4. Model Pipeline Execution
-    for (const model of MODELS_PRIORITY) {
+    for (const [idx, model] of MODELS_PRIORITY.entries()) {
+      addLog(
+        "INFO",
+        `[${requestId}] ➡️ Attempt ${idx + 1}/${MODELS_PRIORITY.length}: model [${model}]`,
+      );
+      const modelAttemptStart = Date.now();
       try {
         const resultBuffer = await callModelApi(
+          requestId,
           model,
           personDataUrl,
           garmentDataUrl,
           promptText,
         );
+        mark(`model:${model}`, modelAttemptStart);
         addLog(
           "INFO",
-          `🎉 Try-on succeeded with model [${model}] in ${Date.now() - reqStart}ms`,
+          `[${requestId}] 🎉 Try-on succeeded with model [${model}] in ${Date.now() - reqStart}ms total`,
         );
 
         // Deduct Limit on Success
@@ -383,6 +478,7 @@ export async function POST(req: NextRequest) {
         const remainingTries = Math.max(0, DAILY_LIMIT - updatedCount);
 
         // 5. Save Test Session on Disk (/data or fallback)
+        stageStart = Date.now();
         try {
           const storageDir = getStorageDir();
           const sessionId = `${Date.now()}_${crypto.randomBytes(3).toString("hex")}`;
@@ -423,15 +519,26 @@ export async function POST(req: NextRequest) {
             path.join(storageDir, `session_${sessionId}_meta.json`),
             JSON.stringify(sessionMeta, null, 2),
           );
+          mark("session-disk-write", stageStart);
         } catch (fsErr: any) {
-          addLog("WARN", `Non-fatal disk write notice: ${fsErr.message}`);
+          addLog(
+            "WARN",
+            `[${requestId}] Non-fatal disk write notice: ${fsErr.message}`,
+          );
         }
+
+        mark("TOTAL", reqStart);
+        addLog(
+          "INFO",
+          `[${requestId}] 📊 STAGE SUMMARY: ${JSON.stringify(stageTimes)}`,
+        );
 
         const response = NextResponse.json({
           success: true,
           message: "پرو لباس با موفقیت انجام شد.",
           model_used: model,
           remaining_tries: remainingTries,
+          request_id: requestId,
           result_image: `data:image/png;base64,${resultBuffer.toString("base64")}`,
         });
 
@@ -452,23 +559,42 @@ export async function POST(req: NextRequest) {
           ? ` (Cause: ${err.cause.code || err.cause.message || JSON.stringify(err.cause)})`
           : "";
         lastError = `${err.message}${causeDetail}`;
+        const failMs = mark(`model:${model}:failed`, modelAttemptStart);
 
-        addLog("ERROR", `Model [${model}] failed: ${lastError}`);
+        addLog(
+          "ERROR",
+          `[${requestId}] ❌ Model [${model}] failed after ${failMs}ms: ${lastError}`,
+        );
       }
     }
+
+    mark("TOTAL (all models failed)", reqStart);
+    addLog(
+      "INFO",
+      `[${requestId}] 📊 STAGE SUMMARY: ${JSON.stringify(stageTimes)}`,
+    );
 
     const farsiMsg = lastError.includes("CONTENT_FILTER_TRIGGERED")
       ? "تصویر ارسالی توسط فیلتر هوشمند مسدود شد. لطفاً از تصویر دیگری با پوشش مناسب‌تر استفاده کنید."
       : `خطا در پردازش تصویر توسط هوش مصنوعی: ${lastError}`;
 
     return NextResponse.json(
-      { success: false, message: farsiMsg },
+      { success: false, message: farsiMsg, request_id: requestId },
       { status: 422 },
     );
   } catch (error: any) {
-    addLog("ERROR", `CRITICAL POST crash: ${error.message}`, error.stack);
+    mark("TOTAL (crashed)", reqStart);
+    addLog(
+      "ERROR",
+      `[${requestId}] 💥 CRITICAL POST crash after ${Date.now() - reqStart}ms: ${error.message}`,
+      error.stack,
+    );
     return NextResponse.json(
-      { success: false, message: `خطای سرور: ${error.message}` },
+      {
+        success: false,
+        message: `خطای سرور: ${error.message}`,
+        request_id: requestId,
+      },
       { status: 500 },
     );
   }

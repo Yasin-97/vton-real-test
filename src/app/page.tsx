@@ -58,8 +58,9 @@ const PRODUCTS: ProductItem[] = [
       "untucked flowy drape",
       "retro white sneakers",
     ],
-    description: "ست کژوال بسیار شیک و خنک...",
-    badge: "پرفروش‌ترین ست فصل",
+    description:
+      "ست کژوال خنک شامل پیراهن لنین یاسی، زیرپیراهنی پنبه‌ای و شلوار کتان شیری با تن‌خور بسیار راحت.",
+    badge: "پرفروش‌ترین فصل",
   },
   {
     id: "outfit-2",
@@ -81,13 +82,14 @@ const PRODUCTS: ProductItem[] = [
       "untucked boxy silhouette",
       "chunky white sneakers",
     ],
-    description: "استایل ترند لش و خیابانی...",
+    description:
+      "استایل ترند لش با تی‌شرت ۲۸۰ گرم پنبه‌ای Rise Above به همراه جین بگ زغالی سنگ‌شور.",
     badge: "ترند اینستاگرام",
   },
   {
     id: "outfit-3",
     title: "پیراهن کلاسیک آکسفورد تمام پنبه آبی آسمانی (طرح پولو)",
-    category: "پیراهن مردانه اسمارت کژوال",
+    category: "پیراهن اسمارت کژوال",
     price: 3380000,
     priceFormatted: "۳,۳۸۰,۰۰۰",
     oldPrice: "۴,۲۵۰,۰۰۰",
@@ -105,8 +107,9 @@ const PRODUCTS: ProductItem[] = [
       "structured tailored fit",
       "embroidered chest pony logo",
     ],
-    description: "پیراهن اداری و مجلسی خوش‌دوخت...",
-    badge: "گارانتی اصالت پارچه",
+    description:
+      "پیراهن اداری و مجلسی با پارچه ۱۰۰٪ آکسفورد ضدچروک با لوگوی گلدوزی ظریف پولو.",
+    badge: "اصالت پارچه",
   },
   {
     id: "outfit-4",
@@ -119,7 +122,7 @@ const PRODUCTS: ProductItem[] = [
     rating: 4.9,
     reviewsCount: 51,
     sku: "SET-LIME-04",
-    image: "/garments/garment-4.jpg",
+    image: "/garments/garment-4.png",
     tags: [
       "2-piece minimalist outfit",
       "relaxed pastel pistachio green cotton shirt",
@@ -127,7 +130,8 @@ const PRODUCTS: ProductItem[] = [
       "rolled-up sleeves",
       "loose breathable cotton drape",
     ],
-    description: "ترکیب چشم‌نواز پیراهن سبک پاستلی...",
+    description:
+      "ترکیب چشم‌نواز پیراهن سبک پاستلی سبز پسته‌ای با شلوار جین واید سفید یخچالی.",
     badge: "کالکشن جدید",
   },
 ];
@@ -206,59 +210,7 @@ export default function ProductPage() {
     0,
   );
 
-  // Helper to resize/compress image in browser
-  const compressImage = (file: File): Promise<File> => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target?.result as string;
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          const MAX_WIDTH = 1024;
-          const MAX_HEIGHT = 1024;
-          let width = img.width;
-          let height = img.height;
-
-          if (width > height) {
-            if (width > MAX_WIDTH) {
-              height *= MAX_WIDTH / width;
-              width = MAX_WIDTH;
-            }
-          } else {
-            if (height > MAX_HEIGHT) {
-              width *= MAX_HEIGHT / height;
-              height = MAX_HEIGHT;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          ctx?.drawImage(img, 0, 0, width, height);
-
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                const compressed = new File([blob], file.name, {
-                  type: "image/jpeg",
-                  lastModified: Date.now(),
-                });
-                resolve(compressed);
-              } else {
-                resolve(file);
-              }
-            },
-            "image/jpeg",
-            0.85,
-          );
-        };
-      };
-    });
-  };
-
-  // Helper to convert File to valid compressed Base64 Data URL
+  // Helper to convert File to compressed Base64 Data URL
   const convertFileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -283,7 +235,6 @@ export default function ProductPage() {
           const ctx = canvas.getContext("2d");
           ctx?.drawImage(img, 0, 0, width, height);
 
-          // Guaranteed valid Base64 Data URL (data:image/jpeg;base64,...)
           const base64 = canvas.toDataURL("image/jpeg", 0.85);
           resolve(base64);
         };
@@ -303,7 +254,7 @@ export default function ProductPage() {
       try {
         const base64Data = await convertFileToBase64(file);
         setUserPhoto(file);
-        setUserPhotoPreview(base64Data); // Real base64 string
+        setUserPhotoPreview(base64Data);
         setErrorMsg(null);
       } catch (err) {
         setErrorMsg("خطا در بارگذاری تصویر. لطفاً تصویر دیگری انتخاب کنید.");
@@ -323,9 +274,7 @@ export default function ProductPage() {
     try {
       const res = await fetch("/api/try-on", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           person_image_base64: userPhotoPreview,
           garment_url: selectedProduct.image,
@@ -365,26 +314,26 @@ export default function ProductPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 pb-16 selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 pb-10 selection:bg-blue-600 selection:text-white">
       {/* ----------------- NAVBAR ----------------- */}
-      <header className="bg-zinc-900/80 backdrop-blur-md border-b border-zinc-800 sticky top-0 z-30">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
-              <Sparkles className="w-5 h-5 text-white" />
+      <header className="bg-zinc-900/90 backdrop-blur-md border-b border-zinc-800/80 sticky top-0 z-30">
+        <div className="max-w-5xl mx-auto px-3.5 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-md shadow-blue-500/20">
+              <Sparkles className="w-4 h-4 text-white" />
             </div>
-            <span className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-zinc-100 to-zinc-400">
-              بوتیک اختصاصی مدرن
+            <span className="text-base sm:text-lg font-black bg-clip-text text-transparent bg-gradient-to-r from-zinc-100 to-zinc-400">
+              بوتیک آنلاین مدرن
             </span>
           </div>
 
           <button
             onClick={() => setIsCartOpen(true)}
-            className="relative p-2.5 rounded-xl bg-zinc-800/80 hover:bg-zinc-800 border border-zinc-700 text-zinc-100 transition"
+            className="relative p-2 rounded-lg bg-zinc-800/80 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-100 transition"
           >
-            <ShoppingBag className="w-5 h-5" />
+            <ShoppingBag className="w-4 h-4" />
             {totalItemsCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-blue-600 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center animate-scaleIn">
+              <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-scaleIn">
                 {totalItemsCount}
               </span>
             )}
@@ -393,40 +342,40 @@ export default function ProductPage() {
       </header>
 
       {/* ----------------- MAIN PRODUCT VIEW ----------------- */}
-      <main className="max-w-6xl mx-auto px-4 mt-8">
-        <div className="bg-zinc-900/60 border border-zinc-800 rounded-3xl p-6 md:p-10 grid grid-cols-1 md:grid-cols-2 gap-10 shadow-2xl">
-          {/* Right Column: Active Image & 4 Interactive Garments */}
+      <main className="max-w-5xl mx-auto px-3 sm:px-4 mt-3 sm:mt-6">
+        <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl md:rounded-3xl p-3.5 sm:p-5 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8 shadow-xl">
+          {/* Column 1: Image & Thumbnails */}
           <div>
-            <div className="aspect-[3/4] bg-zinc-900 rounded-2xl overflow-hidden mb-4 border border-zinc-800 relative group">
+            <div className="w-full aspect-[4/5] max-h-[340px] sm:max-h-[420px] md:max-h-none bg-zinc-900 rounded-xl md:rounded-2xl overflow-hidden mb-3 border border-zinc-800 relative group">
               <img
                 src={selectedProduct.image}
                 alt={selectedProduct.title}
-                className="w-full h-full object-cover transition duration-500"
+                className="w-full h-full object-cover transition duration-300"
               />
-              <span className="absolute top-4 right-4 bg-red-500/90 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-lg">
-                {selectedProduct.discount} تخفیف ویژه
+              <span className="absolute top-2.5 right-2.5 bg-red-500/90 backdrop-blur-md text-white text-[11px] font-bold px-2 py-0.5 rounded-md">
+                {selectedProduct.discount} تخفیف
               </span>
-              <span className="absolute bottom-4 right-4 bg-zinc-950/80 backdrop-blur-md text-blue-400 text-xs font-semibold px-3 py-1 rounded-lg border border-zinc-800">
+              <span className="absolute bottom-2.5 right-2.5 bg-zinc-950/80 backdrop-blur-md text-blue-400 text-[10px] font-semibold px-2 py-0.5 rounded-md border border-zinc-800">
                 {selectedProduct.badge}
               </span>
             </div>
 
-            {/* 4 Interactive Garment Switchers */}
-            <p className="text-xs text-zinc-400 mb-2 font-bold flex items-center gap-1.5">
-              <Tag className="w-3.5 h-3.5 text-blue-400" />
-              برای انتخاب و پرو لباس، روی هر مدل کلیک کنید:
+            {/* Thumbnails */}
+            <p className="text-[11px] text-zinc-400 mb-1.5 font-medium flex items-center gap-1">
+              <Tag className="w-3 h-3 text-blue-400" />
+              مدل را انتخاب کنید:
             </p>
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-4 gap-2">
               {PRODUCTS.map((p) => {
                 const isActive = selectedProduct.id === p.id;
                 return (
                   <button
                     key={p.id}
                     onClick={() => setSelectedProduct(p)}
-                    className={`relative rounded-xl overflow-hidden border-2 aspect-[3/4] transition duration-200 ${
+                    className={`relative rounded-lg overflow-hidden border aspect-[3/4] transition ${
                       isActive
-                        ? "border-blue-500 ring-4 ring-blue-500/30 scale-[1.03]"
-                        : "border-zinc-800 opacity-60 hover:opacity-100 hover:border-zinc-700"
+                        ? "border-blue-500 ring-2 ring-blue-500/30 scale-[1.02]"
+                        : "border-zinc-800 opacity-60 hover:opacity-100"
                     }`}
                   >
                     <img
@@ -435,7 +384,7 @@ export default function ProductPage() {
                       className="w-full h-full object-cover"
                     />
                     {isActive && (
-                      <CheckCircle2 className="absolute top-1.5 right-1.5 text-blue-400 bg-zinc-950 rounded-full w-4 h-4" />
+                      <CheckCircle2 className="absolute top-1 right-1 text-blue-400 bg-zinc-950 rounded-full w-3.5 h-3.5" />
                     )}
                   </button>
                 );
@@ -443,160 +392,160 @@ export default function ProductPage() {
             </div>
           </div>
 
-          {/* Left Column: Dynamic Product Info */}
+          {/* Column 2: Product Info & Actions */}
           <div className="flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between text-xs text-zinc-500 mb-3">
-                <span className="bg-zinc-800/60 px-2.5 py-1 rounded-md text-zinc-400">
+              <div className="flex items-center justify-between text-[11px] text-zinc-500 mb-2">
+                <span className="bg-zinc-800/60 px-2 py-0.5 rounded text-zinc-400">
                   {selectedProduct.category}
                 </span>
                 <div className="flex items-center gap-1 text-amber-400">
-                  <Star className="w-4 h-4 fill-amber-400" />
+                  <Star className="w-3.5 h-3.5 fill-amber-400" />
                   <span className="font-bold text-zinc-200">
                     {selectedProduct.rating}
                   </span>
                   <span className="text-zinc-500">
-                    ({selectedProduct.reviewsCount} نظر خریداران)
+                    ({selectedProduct.reviewsCount})
                   </span>
                 </div>
               </div>
 
-              <h1 className="text-2xl md:text-3xl font-extrabold text-zinc-100 mb-5 leading-relaxed">
+              <h1 className="text-base sm:text-lg md:text-xl font-extrabold text-zinc-100 mb-3 leading-snug">
                 {selectedProduct.title}
               </h1>
 
-              {/* Dynamic Price Box */}
-              <div className="bg-zinc-950/70 border border-zinc-800/80 p-5 rounded-2xl mb-6 flex items-center justify-between">
+              {/* Price Box */}
+              <div className="bg-zinc-950/70 border border-zinc-800/80 p-3 sm:p-4 rounded-xl mb-3.5 flex items-center justify-between">
                 <div>
-                  <span className="text-sm text-zinc-500 line-through ml-2">
+                  <span className="text-xs text-zinc-500 line-through ml-1.5">
                     {selectedProduct.oldPrice}
                   </span>
-                  <span className="text-3xl font-black text-blue-400">
+                  <span className="text-xl sm:text-2xl font-black text-blue-400">
                     {selectedProduct.priceFormatted}
                   </span>
-                  <span className="text-xs text-zinc-400 mr-1.5">تومان</span>
+                  <span className="text-[11px] text-zinc-400 mr-1">تومان</span>
                 </div>
-                <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
-                  موجود در انبار بوتیک
+                <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                  موجود در انبار
                 </span>
               </div>
 
               {/* Description */}
-              <p className="text-zinc-300 text-sm leading-relaxed mb-8 bg-zinc-900/40 p-4 rounded-2xl border border-zinc-800/60">
+              <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed mb-4 bg-zinc-950/30 p-2.5 rounded-xl border border-zinc-800/50">
                 {selectedProduct.description}
               </p>
             </div>
 
             {/* Action Buttons */}
-            <div className="space-y-3.5">
+            <div className="space-y-2.5">
               <button
                 onClick={addToCart}
-                className="w-full bg-zinc-100 hover:bg-white text-zinc-950 font-extrabold py-4 rounded-2xl shadow-lg transition flex items-center justify-center gap-2 active:scale-[0.99]"
+                className="w-full bg-zinc-100 hover:bg-white text-zinc-950 font-bold py-3 rounded-xl shadow transition flex items-center justify-center gap-1.5 text-xs sm:text-sm active:scale-[0.99]"
               >
-                <ShoppingBag className="w-5 h-5" />
-                افزودن این ست به سبد خرید
+                <ShoppingBag className="w-4 h-4" />
+                افزودن به سبد خرید
               </button>
 
-              {/* ✨ AI Virtual Try-On Button ✨ */}
+              {/* VTON Button */}
               <button
                 onClick={() => {
                   resetModal();
                   setIsModalOpen(true);
                 }}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold py-4 rounded-2xl shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition active:scale-[0.99] border border-blue-400/20"
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold py-3 sm:py-3.5 rounded-xl shadow-lg shadow-blue-600/20 flex items-center justify-center gap-1.5 transition text-xs sm:text-sm border border-blue-400/20 active:scale-[0.99]"
               >
-                <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />✨
-                پرو آنلاین این لباس روی تن من (AI)
+                <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />✨
+                پرو آنلاین روی بدن من (هوش مصنوعی)
               </button>
             </div>
 
-            {/* Badges */}
-            <div className="grid grid-cols-3 gap-2 mt-8 pt-6 border-t border-zinc-800/80 text-center text-xs text-zinc-400">
-              <div className="flex flex-col items-center gap-1.5">
-                <Truck className="w-5 h-5 text-blue-400" />
-                <span>ارسال رایگان سراسری</span>
+            {/* Trust Badges */}
+            <div className="grid grid-cols-3 gap-1 mt-4 pt-3 border-t border-zinc-800/60 text-center text-[10px] text-zinc-500">
+              <div className="flex flex-col items-center gap-1">
+                <Truck className="w-4 h-4 text-blue-400" />
+                <span>ارسال رایگان</span>
               </div>
-              <div className="flex flex-col items-center gap-1.5">
-                <ShieldCheck className="w-5 h-5 text-blue-400" />
-                <span>ضمانت کیفیت پارچه</span>
+              <div className="flex flex-col items-center gap-1">
+                <ShieldCheck className="w-4 h-4 text-blue-400" />
+                <span>ضمانت کیفیت</span>
               </div>
-              <div className="flex flex-col items-center gap-1.5">
-                <RotateCcw className="w-5 h-5 text-blue-400" />
-                <span>۷ روز ضمانت تعویض</span>
+              <div className="flex flex-col items-center gap-1">
+                <RotateCcw className="w-4 h-4 text-blue-400" />
+                <span>۷ روز تعویض</span>
               </div>
             </div>
           </div>
         </div>
       </main>
 
-      {/* ----------------- SHOPPING CART DRAWER ----------------- */}
+      {/* ----------------- COMPACT SHOPPING CART DRAWER ----------------- */}
       {isCartOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex justify-end">
-          <div className="bg-zinc-900 border-r border-zinc-800 w-full max-w-md h-full flex flex-col justify-between p-6 animate-in slide-in-from-right duration-300">
+          <div className="bg-zinc-900 border-r border-zinc-800 w-full max-w-sm sm:max-w-md h-full flex flex-col justify-between p-4 sm:p-5 animate-in slide-in-from-right duration-200">
             <div>
-              <div className="flex items-center justify-between pb-4 border-b border-zinc-800 mb-6">
+              <div className="flex items-center justify-between pb-3 border-b border-zinc-800 mb-4">
                 <div className="flex items-center gap-2">
-                  <ShoppingBag className="w-5 h-5 text-blue-400" />
-                  <h3 className="font-bold text-lg">
+                  <ShoppingBag className="w-4 h-4 text-blue-400" />
+                  <h3 className="font-bold text-sm sm:text-base">
                     سبد خرید شما ({totalItemsCount})
                   </h3>
                 </div>
                 <button
                   onClick={() => setIsCartOpen(false)}
-                  className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white"
+                  className="p-1.5 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
               {cart.length === 0 ? (
-                <div className="text-center py-16 text-zinc-500">
-                  <ShoppingBag className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <div className="text-center py-16 text-zinc-500 text-xs">
+                  <ShoppingBag className="w-10 h-10 mx-auto mb-2 opacity-30" />
                   <p>سبد خرید شما خالی است.</p>
                 </div>
               ) : (
-                <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+                <div className="space-y-2.5 max-h-[60vh] overflow-y-auto pr-1">
                   {cart.map((item) => (
                     <div
                       key={item.id}
-                      className="flex gap-4 bg-zinc-950/50 p-3.5 rounded-2xl border border-zinc-800/80 items-center justify-between"
+                      className="flex gap-3 bg-zinc-950/60 p-2.5 rounded-xl border border-zinc-800/80 items-center justify-between"
                     >
                       <img
                         src={item.image}
                         alt={item.title}
-                        className="w-16 h-20 object-cover rounded-xl border border-zinc-800"
+                        className="w-12 h-14 object-cover rounded-lg border border-zinc-800"
                       />
                       <div className="flex-1">
-                        <h4 className="text-xs font-bold text-zinc-200 line-clamp-1 mb-1">
+                        <h4 className="text-[11px] font-bold text-zinc-200 line-clamp-1 mb-0.5">
                           {item.title}
                         </h4>
-                        <p className="text-xs text-blue-400 font-extrabold mb-2">
+                        <p className="text-[11px] text-blue-400 font-extrabold mb-1.5">
                           {(item.price * item.quantity).toLocaleString("fa-IR")}{" "}
                           تومان
                         </p>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                           <button
                             onClick={() => updateQuantity(item.id, 1)}
-                            className="w-6 h-6 rounded-md bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-xs"
+                            className="w-5 h-5 rounded bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-xs"
                           >
-                            <Plus className="w-3 h-3" />
+                            <Plus className="w-2.5 h-2.5" />
                           </button>
                           <span className="text-xs font-bold px-1">
                             {item.quantity}
                           </span>
                           <button
                             onClick={() => updateQuantity(item.id, -1)}
-                            className="w-6 h-6 rounded-md bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-xs"
+                            className="w-5 h-5 rounded bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-xs"
                           >
-                            <Minus className="w-3 h-3" />
+                            <Minus className="w-2.5 h-2.5" />
                           </button>
                         </div>
                       </div>
                       <button
                         onClick={() => removeFromCart(item.id)}
-                        className="p-2 text-zinc-500 hover:text-red-400"
+                        className="p-1.5 text-zinc-500 hover:text-red-400"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   ))}
@@ -605,10 +554,10 @@ export default function ProductPage() {
             </div>
 
             {cart.length > 0 && (
-              <div className="pt-4 border-t border-zinc-800">
-                <div className="flex justify-between items-center mb-4 text-sm">
-                  <span className="text-zinc-400">مبلغ قابل پرداخت:</span>
-                  <span className="text-xl font-black text-blue-400">
+              <div className="pt-3 border-t border-zinc-800">
+                <div className="flex justify-between items-center mb-3 text-xs">
+                  <span className="text-zinc-400">مبلغ کل:</span>
+                  <span className="text-base font-black text-blue-400">
                     {totalPrice.toLocaleString("fa-IR")} تومان
                   </span>
                 </div>
@@ -619,9 +568,9 @@ export default function ProductPage() {
                     setTimeout(() => {
                       setOrderSuccess(false);
                       setIsCartOpen(false);
-                    }, 2500);
+                    }, 2000);
                   }}
-                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-extrabold py-3.5 rounded-xl shadow-lg transition"
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl shadow text-xs sm:text-sm transition"
                 >
                   {orderSuccess
                     ? "سفارش شما با موفقیت ثبت شد ✓"
@@ -633,60 +582,59 @@ export default function ProductPage() {
         </div>
       )}
 
-      {/* ----------------- DARK VTON MODAL ----------------- */}
+      {/* ----------------- COMPACT MOBILE-FRIENDLY VTON MODAL ----------------- */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden relative animate-in fade-in zoom-in duration-200">
-            <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-950/40">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-blue-400" />
-                <h3 className="font-bold text-zinc-100">
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden relative max-h-[92vh] flex flex-col animate-in fade-in zoom-in duration-150">
+            {/* Modal Header */}
+            <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between bg-zinc-950/40">
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-blue-400" />
+                <h3 className="font-bold text-xs sm:text-sm text-zinc-100">
                   پرو هوشمند آنلاین با AI
                 </h3>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white"
+                className="p-1 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-6">
-              {" "}
+            {/* Modal Body */}
+            <div className="p-4 overflow-y-auto">
               {remainingTries !== null && (
-                <div className="mb-4 text-center">
-                  <span className="text-xs bg-blue-500/10 border border-blue-500/20 text-blue-400 px-3 py-1 rounded-full font-medium">
-                    تعداد پرو مجاز باقی‌مانده امروز شما: {remainingTries} عدد
+                <div className="mb-3 text-center">
+                  <span className="text-[10px] sm:text-xs bg-blue-500/10 border border-blue-500/20 text-blue-400 px-2.5 py-0.5 rounded-full font-medium">
+                    فرصت مجاز پرو امروز شما: {remainingTries} عدد
                   </span>
                 </div>
               )}
+
               {!resultImg && !loading && (
                 <div>
-                  <div className="flex items-center gap-3 mb-5 p-3 bg-zinc-950 rounded-2xl border border-zinc-800">
+                  <div className="flex items-center gap-2.5 mb-3 p-2 bg-zinc-950 rounded-xl border border-zinc-800/80">
                     <img
                       src={selectedProduct.image}
                       alt="Garment"
-                      className="w-14 h-16 object-cover rounded-xl border border-zinc-800"
+                      className="w-10 h-12 object-cover rounded-lg border border-zinc-800"
                     />
-                    <div className="text-xs">
-                      <p className="text-zinc-500 mb-0.5">
-                        لباس انتخابی برای پرو:
-                      </p>
+                    <div className="text-[11px]">
+                      <p className="text-zinc-500 text-[10px]">لباس انتخابی:</p>
                       <p className="font-bold text-zinc-200 line-clamp-1">
                         {selectedProduct.title}
                       </p>
                     </div>
                   </div>
 
-                  <p className="text-xs text-zinc-400 mb-3">
-                    یک عکس تمام‌قد از خودتان بارگذاری کنید تا تن‌خور این لباس را
-                    روی بدن خود ببینید:
+                  <p className="text-[11px] text-zinc-400 mb-2">
+                    عکس تمام‌قد خود را بارگذاری کنید:
                   </p>
 
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-zinc-700 hover:border-blue-500 bg-zinc-950/50 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition h-52 relative overflow-hidden"
+                    className="border border-dashed border-zinc-700 hover:border-blue-500 bg-zinc-950/50 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer transition h-36 sm:h-44 relative overflow-hidden"
                   >
                     {userPhotoPreview ? (
                       <img
@@ -696,12 +644,12 @@ export default function ProductPage() {
                       />
                     ) : (
                       <>
-                        <Upload className="w-8 h-8 text-zinc-500 mb-2" />
+                        <Upload className="w-6 h-6 text-zinc-500 mb-1.5" />
                         <span className="text-xs font-semibold text-zinc-300">
-                          برای انتخاب عکس خود کلیک کنید
+                          لمس برای انتخاب عکس
                         </span>
-                        <span className="text-[11px] text-zinc-600 mt-1">
-                          فرمت‌های JPG یا PNG (تمام قد)
+                        <span className="text-[10px] text-zinc-500 mt-0.5">
+                          فرمت JPG یا PNG
                         </span>
                       </>
                     )}
@@ -715,7 +663,7 @@ export default function ProductPage() {
                   />
 
                   {errorMsg && (
-                    <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl">
+                    <div className="mt-3 p-2.5 bg-red-500/10 border border-red-500/20 text-red-400 text-[11px] rounded-xl text-center">
                       {errorMsg}
                     </div>
                   )}
@@ -723,26 +671,28 @@ export default function ProductPage() {
                   <button
                     onClick={handleTryOnSubmit}
                     disabled={!userPhoto}
-                    className="w-full mt-5 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-extrabold py-3.5 rounded-2xl transition"
+                    className="w-full mt-3.5 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-bold py-2.5 sm:py-3 rounded-xl transition text-xs sm:text-sm"
                   >
                     مشاهده تن‌خور روی بدن من
                   </button>
                 </div>
               )}
+
               {loading && (
-                <div className="py-14 text-center">
-                  <RefreshCw className="w-10 h-10 text-blue-400 animate-spin mx-auto mb-4" />
-                  <h4 className="text-base font-bold text-zinc-200 mb-1">
+                <div className="py-10 text-center">
+                  <RefreshCw className="w-8 h-8 text-blue-400 animate-spin mx-auto mb-3" />
+                  <h4 className="text-xs sm:text-sm font-bold text-zinc-200 mb-1">
                     در حال هوشمندسازی و پرو لباس...
                   </h4>
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-[10px] text-zinc-500">
                     لطفاً ۱۰ الی ۲۵ ثانیه صبور باشید.
                   </p>
                 </div>
               )}
+
               {resultImg && (
                 <div>
-                  <div className="rounded-2xl overflow-hidden border border-zinc-800 shadow-lg mb-5 aspect-[3/4] bg-zinc-950">
+                  <div className="rounded-xl overflow-hidden border border-zinc-800 shadow mb-3 aspect-[3/4] max-h-[320px] bg-zinc-950 mx-auto">
                     <img
                       src={resultImg}
                       alt="Result"
@@ -753,14 +703,14 @@ export default function ProductPage() {
                     <a
                       href={resultImg}
                       download="vton-result.png"
-                      className="flex-1 bg-white hover:bg-zinc-200 text-zinc-950 text-center font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 transition"
+                      className="flex-1 bg-white hover:bg-zinc-200 text-zinc-950 text-center font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition"
                     >
-                      <Download className="w-4 h-4" />
-                      دانلود عکس نهایی
+                      <Download className="w-3.5 h-3.5" />
+                      دانلود عکس
                     </a>
                     <button
                       onClick={resetModal}
-                      className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold px-4 py-3 rounded-xl text-xs transition"
+                      className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold px-3 py-2.5 rounded-xl text-xs transition"
                     >
                       تلاش مجدد
                     </button>
