@@ -416,8 +416,13 @@ export async function POST(req: NextRequest) {
 
         return response;
       } catch (err: any) {
-        lastError = err.message;
-        addLog("ERROR", `Model [${model}] failed: ${err.message}`);
+        // Extract deep Node.js fetch failure details (socket reset, timeout, DNS, etc.)
+        const causeDetail = err?.cause
+          ? ` (Cause: ${err.cause.code || err.cause.message || JSON.stringify(err.cause)})`
+          : "";
+        lastError = `${err.message}${causeDetail}`;
+
+        addLog("ERROR", `Model [${model}] failed: ${lastError}`);
       }
     }
 
