@@ -25,27 +25,30 @@ const PROMPT =
   // ROLE
   "Act as a professional post-production retoucher for a fashion e-commerce studio performing a virtual garment try-on composite. " +
   // TASK
-  "You are given two images. Image 1 is a photograph of a real person — the identity and scene reference. Image 2 shows a garment or full outfit — the apparel reference only. " +
-  "Generate a single new photograph of the exact person from Image 1, wearing the exact garment(s) from Image 2, as if photographed together in one real photoshoot. " +
+  "You are given two images. Image 1 is a photograph of a real person — the identity and scene reference. Image 2 shows a garment or outfit on its own — the apparel reference only. " +
+  "Generate one new photograph of the exact person from Image 1, wearing the exact garment(s) from Image 2, as if photographed together in a single real photoshoot. Prioritize extreme photographic naturalness over stylization — this must be indistinguishable from an unedited photo. " +
+  // CORE PRINCIPLE — the general rule, not a tattoo-specific one
+  "CORE PRINCIPLE — treat Image 1 as ground truth for everything except the garment area being replaced. Never invent, add, remove, smooth over, or guess at any physical detail — skin marks, body shape, proportions, texture, asymmetries — that isn't visible and verifiable in Image 1. If something is ambiguous or not visible in Image 1, render it plainly/neutrally rather than inventing detail. " +
+  // GARMENT SCOPE — model infers coverage itself
+  "GARMENT SCOPE INFERENCE — there is no metadata telling you what the garment covers. Determine this yourself from Image 2: is it a top only, bottom only, full-body piece (dress, jumpsuit, romper), an outer layer worn over other clothing, footwear, or an accessory. Replace ONLY the body region(s) the Image 2 garment actually occupies. Every part of the person's body, clothing, and accessories outside that region must remain exactly as shown in Image 1 — do not restyle, recolor, or regenerate anything you weren't asked to change. " +
+  // FIT & SILHOUETTE — model infers fit character itself
+  "FIT AND SILHOUETTE INFERENCE — study how the garment sits in Image 2 itself before placing it on the person: is it loose/oversized/relaxed, fitted/bodycon/second-skin, structured/tailored/stiff, or soft/flowy with fluid movement. Reproduce that exact fit character on the person's actual body — do not normalize a loose garment into a tight one or vice versa, and do not default to a generic 'flattering' fit. The garment should hang, cling, or structure itself on this specific body exactly the way its own fabric and cut dictate, adjusted only for this person's proportions and pose. " +
+  // FABRIC PHYSICS — tied to the inferred fit
+  "FABRIC PHYSICS — render drape, tension, and folds consistent with both the inferred fit and the fabric type visible in Image 2 (denim, knit, silk, leather, cotton, etc.). Loose fabric should show soft gathering and gravity-driven folds; tight fabric should show tension lines and body-hugging contours; structured fabric should hold its own shape at collars/cuffs/hems rather than draping like soft fabric. Shadows and highlights on the garment must match Image 1's existing light source and direction exactly. " +
   // IDENTITY LOCK
-  "IDENTITY LOCK — copy from Image 1 with zero deviation: facial structure, facial features and expression, exact skin tone and texture, body shape and proportions, exact pose and posture, hand and finger position, hairstyle and hair color, and framing/crop. Do not beautify, slim, age, or otherwise alter the person. " +
-  // BODY MARKINGS (the "don't add, don't remove" rule)
-  "BODY MARKINGS — tattoos, scars, moles, freckles, birthmarks, piercings: if visible in Image 1, reproduce them at the same location, size, and design, adapted only for the new pose/fabric coverage. If Image 1 shows no such mark on a given area of skin, the output must not contain one there — never invent a tattoo, scar, or piercing absent from the source. " +
-  // NEWLY EXPOSED SKIN — the edge case that usually gets missed
-  "NEWLY EXPOSED SKIN — if the new garment's silhouette reveals skin that was covered in Image 1 (e.g. a short sleeve replacing a long sleeve), render that skin plain, matching the person's visible tone and texture elsewhere on the same limb. Do not extrapolate or guess at markings for skin that was never visible in Image 1. " +
-  // GARMENT TRANSFER
-  "GARMENT TRANSFER — reproduce every piece of apparel in Image 2 exactly: color, print/pattern, logos and graphics, fabric type and texture (denim, knit, silk, leather, etc.), cut, silhouette, sleeve and hem length, and layering order if multiple pieces are shown. Fit it to the person's actual body shape and current pose with physically accurate drape, tension, and gravity — natural folds at joints (elbows, waist, knees), shadow/highlight direction matching Image 1's existing light source, and seams/hems that sit on the body rather than floating or clipping. " +
+  "IDENTITY LOCK — keep unchanged from Image 1: facial structure and expression, exact skin tone and texture, body shape and proportions, pose and posture, hand and finger position, hairstyle and hair color, and framing/crop. Do not beautify, slim, age, or idealize the person. " +
+  // NEWLY EXPOSED OR NEWLY COVERED SKIN — general, not example-specific
+  "SKIN VISIBILITY CHANGES — if the new garment's silhouette exposes skin that was covered in Image 1, render that skin plainly, matching tone and texture from the nearest visible skin on the same body part in Image 1 — do not add anything new to it. If the new garment covers skin that was visible in Image 1 (including any marks, tattoos, or accessories on it), simply let the garment cover it naturally; do not let covered details show through fabric. " +
   // ACCESSORIES
-  "ACCESSORY REPLACEMENT — only if Image 2 explicitly includes an accessory (watch, eyewear, jewelry, belt, hat, bag, shoes), replace the person's existing accessory in that same category with the one from Image 2, scaled naturally to their proportions. Leave every other accessory already on the person untouched. If Image 2 shows no accessories, add none. " +
+  "ACCESSORY REPLACEMENT — only if Image 2 explicitly includes an accessory (watch, eyewear, jewelry, belt, hat, bag, shoes), replace the person's existing item in that same category, scaled to their proportions. If Image 2 shows no accessories, change none. " +
   // SCENE INTEGRITY
-  "SCENE INTEGRITY — keep the background, lighting direction and color temperature, camera angle, focal length, and framing from Image 1 completely unchanged. This is a garment swap only, not a new photoshoot. " +
+  "SCENE INTEGRITY — keep background, lighting direction and color temperature, camera angle, focal length, and framing identical to Image 1. This is a garment swap, not a new photoshoot. " +
   // CLEANUP
-  "SOURCE CLEANUP — Image 2 may include a hanger, mannequin, model's hands, price tag, or brand sticker; exclude all of these entirely. Include nothing from Image 2 except the apparel itself. " +
+  "SOURCE CLEANUP — exclude anything from Image 2 that isn't the garment itself: hangers, mannequin parts, model's hands, price tags, brand stickers. " +
   // OUTPUT
-  "OUTPUT — a single photorealistic photograph, same aspect ratio and resolution as Image 1, no added people, no text/captions/watermarks/collage panels, anatomically correct hands and limbs, no visible compositing seams. " +
+  "OUTPUT — one photorealistic photograph, same aspect ratio and resolution as Image 1, anatomically correct hands and limbs, no text/watermarks/collage panels, no visible compositing seams or blending artifacts. " +
   // NEGATIVE CONSTRAINTS
-  "DO NOT: change the person's identity, body shape, or pose; add or remove tattoos, scars, or accessories not present in the source images; alter the background or lighting; leave any garment tag, hanger, or extraneous hand in frame; distort anatomy; output more than one image or any text.";
-
+  "DO NOT: alter identity, body shape, proportions, or pose; add or remove any physical detail not visible in Image 1; apply a fit or drape that contradicts how the garment actually looks in Image 2; touch any body region or clothing item outside the garment's actual scope; change background or lighting; leave tags, hangers, or extraneous hands in frame; output more than one image or any text.";
 // ----------------- BASE64 SANITIZER & VALIDATOR -----------------
 function cleanAndNormalizeDataUrl(raw: string): string {
   if (!raw || typeof raw !== "string") {
