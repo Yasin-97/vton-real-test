@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
+import { addLog } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -28,14 +29,12 @@ const PROMPT =
   "Omit any store hangers, price tags, brand labels, stickers, or extraneous body parts (such as hands holding the clothes) from the second image. " +
   "Output a single photorealistic photograph.";
 
-// ----------------- RATE LIMITING -----------------
 function getUserKey(req: NextRequest): { userKey: string; newCookie?: string } {
   const ip =
     req.headers.get("cf-connecting-ip") ||
     req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
     req.headers.get("x-real-ip") ||
     "127.0.0.1";
-
   const userAgent = req.headers.get("user-agent") || "unknown";
   const existingCookie = req.cookies.get("vton_uid")?.value;
   const cookieId = existingCookie || crypto.randomUUID();
@@ -47,31 +46,6 @@ function getUserKey(req: NextRequest): { userKey: string; newCookie?: string } {
     .slice(0, 16);
 
   return { userKey, newCookie: existingCookie ? undefined : cookieId };
-}
-
-function getLimitsData(): Record<string, { date: string; count: number }> {
-  try {
-    const resultsDir = path.join(process.cwd(), "public", "results");
-    if (!fs.existsSync(resultsDir))
-      fs.mkdirSync(resultsDir, { recursive: true });
-    const rateLimitFile = path.join(resultsDir, "rate_limits.json");
-    if (fs.existsSync(rateLimitFile)) {
-      return JSON.parse(fs.readFileSync(rateLimitFile, "utf-8"));
-    }
-  } catch {}
-  return {};
-}
-
-function saveLimitsData(data: Record<string, { date: string; count: number }>) {
-  try {
-    const resultsDir = path.join(process.cwd(), "public", "results");
-    if (!fs.existsSync(resultsDir))
-      fs.mkdirSync(resultsDir, { recursive: true });
-    fs.writeFileSync(
-      path.join(resultsDir, "rate_limits.json"),
-      JSON.stringify(data, null, 2),
-    );
-  } catch {}
 }
 
 function extractImageB64FromChat(json: any): string {
@@ -99,7 +73,7 @@ function extractImageB64FromChat(json: any): string {
     );
     if (match) return match[1];
   }
-  throw new Error("تصویر در خروجی مدل یافت نشد.");
+  throw new Error("تصویر خروجی یافت نشد.");
 }
 
 async function callModelApi(
@@ -111,6 +85,9 @@ async function callModelApi(
     "Content-Type": "application/json",
     Authorization: `Bearer ${API_KEY}`,
   };
+  const startTime = Date.now();
+
+  addLog("INFO", `Calling AvalAI API with model [${model}]...`);
 
   if (model.startsWith("gemini")) {
     const payload = {
@@ -146,7 +123,12 @@ async function callModelApi(
       signal: AbortSignal.timeout(90000),
     });
 
+    addLog(
+      "INFO",
+      `[${model}] Response HTTP ${res.status} in ${Date.now() - startTime}ms`,
+    );
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+
     const data = await res.json();
     return Buffer.from(extractImageB64FromChat(data), "base64");
   } else {
@@ -166,10 +148,14 @@ async function callModelApi(
       signal: AbortSignal.timeout(90000),
     });
 
+    addLog(
+      "INFO",
+      `[${model}] Response HTTP ${res.status} in ${Date.now() - startTime}ms`,
+    );
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+
     const data = await res.json();
     const item = data.data?.[0];
-
     if (item?.b64_json) return Buffer.from(item.b64_json, "base64");
     if (item?.url) {
       if (item.url.startsWith("data:"))
@@ -181,45 +167,36 @@ async function callModelApi(
   }
 }
 
-// ----------------- MAIN API -----------------
 export async function POST(req: NextRequest) {
+  const reqStart = Date.now();
+  addLog(
+    "INFO",
+    `👉 Incoming POST /api/try-on from IP: ${req.headers.get("x-real-ip") || "unknown"}`,
+  );
+
   try {
-    const today = new Date().toISOString().slice(0, 10);
     const { userKey, newCookie } = getUserKey(req);
-
-    // 1. Check Rate Limits
-    const limitsData = getLimitsData();
-    const userRecord = limitsData[userKey];
-    const currentCount =
-      userRecord && userRecord.date === today ? userRecord.count : 0;
-
-    if (currentCount >= DAILY_LIMIT) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "شما به سقف مجاز روزانه (۴ بار پرو در روز) رسیده‌اید.",
-          remaining_tries: 0,
-        },
-        { status: 429 },
-      );
-    }
-
-    // 2. Read Clean JSON Body
     const body = await req.json();
     const { person_image_base64, garment_url } = body;
 
     if (!person_image_base64) {
+      addLog("WARN", "Missing person_image_base64 in request body");
       return NextResponse.json(
-        { success: false, message: "تصویر ارسال نشده است." },
+        { success: false, message: "تصویر کاربر الزامی است." },
         { status: 400 },
       );
     }
+
+    addLog(
+      "INFO",
+      `Payload size: ~${Math.round(person_image_base64.length / 1024)} KB. Target: ${garment_url}`,
+    );
 
     const personDataUrl = person_image_base64.startsWith("data:")
       ? person_image_base64
       : `data:image/jpeg;base64,${person_image_base64}`;
 
-    // 3. Resolve Garment Image to Data URL
+    // Read Garment
     let garmentDataUrl = "";
     const cleanGarmentPath = (garment_url || "/garments/garment-1.jpg").replace(
       /^\//,
@@ -235,37 +212,35 @@ export async function POST(req: NextRequest) {
       const gBuf = fs.readFileSync(localGarmentPath);
       garmentDataUrl = `data:image/jpeg;base64,${gBuf.toString("base64")}`;
     } else {
+      addLog(
+        "WARN",
+        `Garment not found locally at ${localGarmentPath}, attempting fetch`,
+      );
       const origin = req.nextUrl.origin;
       const gRes = await fetch(`${origin}/${cleanGarmentPath}`);
       const gBuf = Buffer.from(await gRes.arrayBuffer());
       garmentDataUrl = `data:image/jpeg;base64,${gBuf.toString("base64")}`;
     }
 
-    let lastErrorType = "";
+    let lastError = "";
 
-    // 4. Run AI Models
     for (const model of MODELS_PRIORITY) {
       try {
-        console.log(`[VTON] Running ${model} for user ${userKey}...`);
         const resultBuffer = await callModelApi(
           model,
           personDataUrl,
           garmentDataUrl,
         );
+        addLog(
+          "INFO",
+          `🎉 Success with ${model} in ${Date.now() - reqStart}ms`,
+        );
 
-        // Deduct try
-        const updatedCount = currentCount + 1;
-        limitsData[userKey] = { date: today, count: updatedCount };
-        saveLimitsData(limitsData);
-
-        const remainingTries = Math.max(0, DAILY_LIMIT - updatedCount);
-
-        // 5. Save To Disk (Isolated Try-Catch)
+        // Save session safely
         try {
           const resultDir = path.join(process.cwd(), "public", "results");
           if (!fs.existsSync(resultDir))
             fs.mkdirSync(resultDir, { recursive: true });
-
           const sessionId = `${Date.now()}_${crypto.randomBytes(3).toString("hex")}`;
           const personBuffer = Buffer.from(
             personDataUrl.split(",")[1],
@@ -288,30 +263,31 @@ export async function POST(req: NextRequest) {
             path.join(resultDir, `session_${sessionId}_result.png`),
             resultBuffer,
           );
-
-          const sessionMeta = {
-            id: sessionId,
-            personUrl: `/results/session_${sessionId}_person.jpg`,
-            garmentUrl: `/results/session_${sessionId}_garment.jpg`,
-            resultUrl: `/results/session_${sessionId}_result.png`,
-            modelUsed: model,
-            userKey,
-            createdAt: new Date().toISOString(),
-          };
-
           fs.writeFileSync(
             path.join(resultDir, `session_${sessionId}_meta.json`),
-            JSON.stringify(sessionMeta, null, 2),
+            JSON.stringify(
+              {
+                id: sessionId,
+                personUrl: `/results/session_${sessionId}_person.jpg`,
+                garmentUrl: `/results/session_${sessionId}_garment.jpg`,
+                resultUrl: `/results/session_${sessionId}_result.png`,
+                modelUsed: model,
+                userKey,
+                createdAt: new Date().toISOString(),
+              },
+              null,
+              2,
+            ),
           );
-        } catch (e) {
-          console.warn("[VTON] Non-fatal save error:", e);
+        } catch (e: any) {
+          addLog("WARN", `Non-fatal disk write error: ${e.message}`);
         }
 
         const response = NextResponse.json({
           success: true,
           message: "پرو لباس با موفقیت انجام شد.",
           model_used: model,
-          remaining_tries: remainingTries,
+          remaining_tries: 3,
           result_image: `data:image/png;base64,${resultBuffer.toString("base64")}`,
         });
 
@@ -322,33 +298,23 @@ export async function POST(req: NextRequest) {
             httpOnly: true,
             maxAge: 60 * 60 * 24 * 365,
             path: "/",
-            sameSite: "lax",
           });
         }
-
         return response;
       } catch (err: any) {
-        console.error(`[VTON] ${model} failed:`, err.message);
-        lastErrorType =
-          err.message === "CONTENT_FILTER_TRIGGERED"
-            ? "SAFETY_FILTER"
-            : "API_ERROR";
+        lastError = err.message;
+        addLog("ERROR", `Model [${model}] failed: ${err.message}`);
       }
     }
 
-    const farsiMsg =
-      lastErrorType === "SAFETY_FILTER"
-        ? "تصویر ارسالی توسط فیلتر هوشمند مسدود شد. لطفاً از تصویر مناسب‌تری استفاده کنید."
-        : "سرویس در حال حاضر شلوغ است. لطفاً لحظاتی دیگر مجدداً تلاش کنید.";
-
     return NextResponse.json(
-      { success: false, message: farsiMsg },
+      { success: false, message: `خطا در پردازش هوش مصنوعی: ${lastError}` },
       { status: 422 },
     );
   } catch (error: any) {
-    console.error("[VTON Error]:", error);
+    addLog("ERROR", `CRITICAL POST crash: ${error.message}`, error.stack);
     return NextResponse.json(
-      { success: false, message: "خطا در برقراری ارتباط با سرور." },
+      { success: false, message: `خطای سرور: ${error.message}` },
       { status: 500 },
     );
   }
