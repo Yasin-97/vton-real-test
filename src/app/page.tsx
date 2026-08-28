@@ -241,7 +241,7 @@ export default function ProductPage() {
   };
 
   const handleTryOnSubmit = async () => {
-    if (!userPhoto) {
+    if (!userPhotoPreview) {
       setErrorMsg("لطفاً ابتدا تصویر خود را انتخاب کنید.");
       return;
     }
@@ -249,15 +249,18 @@ export default function ProductPage() {
     setLoading(true);
     setErrorMsg(null);
 
-    const formData = new FormData();
-    formData.append("person_image", userPhoto);
-    formData.append("garment_url", selectedProduct.image);
-
     try {
       const res = await fetch("/api/try-on", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          person_image_base64: userPhotoPreview,
+          garment_url: selectedProduct.image,
+        }),
       });
+
       const data = await res.json();
 
       if (res.status === 429) {
