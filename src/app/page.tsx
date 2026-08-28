@@ -122,7 +122,7 @@ const PRODUCTS: ProductItem[] = [
     rating: 4.9,
     reviewsCount: 51,
     sku: "SET-LIME-04",
-    image: "/garments/garment-4.png",
+    image: "/garments/garment-3.png",
     tags: [
       "2-piece minimalist outfit",
       "relaxed pastel pistachio green cotton shirt",
