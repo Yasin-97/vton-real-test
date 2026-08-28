@@ -228,21 +228,62 @@ export default function ProductPage() {
     });
   };
 
+  // Helper to convert File to valid compressed Base64 Data URL
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_DIM = 1024;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height && width > MAX_DIM) {
+            height = Math.round((height * MAX_DIM) / width);
+            width = MAX_DIM;
+          } else if (height > MAX_DIM) {
+            width = Math.round((width * MAX_DIM) / height);
+            height = MAX_DIM;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, width, height);
+
+          // Guaranteed valid Base64 Data URL (data:image/jpeg;base64,...)
+          const base64 = canvas.toDataURL("image/jpeg", 0.85);
+          resolve(base64);
+        };
+        img.onerror = () => resolve(reader.result as string);
+        img.src = reader.result as string;
+      };
+      reader.onerror = (error) => reject(error);
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleUserPhotoChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     if (e.target.files?.[0]) {
       const file = e.target.files[0];
-      const compressedFile = await compressImage(file);
-      setUserPhoto(compressedFile);
-      setUserPhotoPreview(URL.createObjectURL(compressedFile));
-      setErrorMsg(null);
+      try {
+        const base64Data = await convertFileToBase64(file);
+        setUserPhoto(file);
+        setUserPhotoPreview(base64Data); // Real base64 string
+        setErrorMsg(null);
+      } catch (err) {
+        setErrorMsg("خطا در بارگذاری تصویر. لطفاً تصویر دیگری انتخاب کنید.");
+      }
     }
   };
 
   const handleTryOnSubmit = async () => {
-    if (!userPhotoPreview) {
-      setErrorMsg("لطفاً ابتدا تصویر خود را انتخاب کنید.");
+    if (!userPhotoPreview || !userPhotoPreview.startsWith("data:image/")) {
+      setErrorMsg("لطفاً ابتدا تصویر خود را بارگذاری کنید.");
       return;
     }
 

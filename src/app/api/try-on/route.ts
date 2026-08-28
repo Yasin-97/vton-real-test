@@ -29,6 +29,31 @@ const PROMPT =
   "Omit any store hangers, price tags, brand labels, stickers, or extraneous body parts (such as hands holding the clothes) from the second image. " +
   "Output a single photorealistic photograph.";
 
+// ----------------- BASE64 SANITIZER & VALIDATOR -----------------
+function cleanAndNormalizeDataUrl(raw: string): string {
+  if (!raw || typeof raw !== "string") {
+    throw new Error("داده تصویر نامعتبر یا خالی است.");
+  }
+
+  const trimmed = raw.trim();
+
+  // If already prefixed: data:image/jpeg;base64,...
+  if (trimmed.startsWith("data:image/")) {
+    const commaIndex = trimmed.indexOf(",");
+    if (commaIndex === -1) {
+      throw new Error("فرمت Data URL تصویر نامعتبر است.");
+    }
+    const header = trimmed.slice(0, commaIndex);
+    const b64Data = trimmed.slice(commaIndex + 1).replace(/[\r\n\s]/g, "");
+    return `${header},${b64Data}`;
+  }
+
+  // If raw base64 string without header
+  const cleanedB64 = trimmed.replace(/[\r\n\s]/g, "");
+  return `data:image/jpeg;base64,${cleanedB64}`;
+}
+
+// ----------------- RATE LIMITING -----------------
 function getUserKey(req: NextRequest): { userKey: string; newCookie?: string } {
   const ip =
     req.headers.get("cf-connecting-ip") ||
@@ -48,17 +73,48 @@ function getUserKey(req: NextRequest): { userKey: string; newCookie?: string } {
   return { userKey, newCookie: existingCookie ? undefined : cookieId };
 }
 
+function getLimitsData(): Record<string, { date: string; count: number }> {
+  try {
+    const resultsDir = path.join(process.cwd(), "public", "results");
+    if (!fs.existsSync(resultsDir))
+      fs.mkdirSync(resultsDir, { recursive: true });
+    const rateLimitFile = path.join(resultsDir, "rate_limits.json");
+    if (fs.existsSync(rateLimitFile)) {
+      return JSON.parse(fs.readFileSync(rateLimitFile, "utf-8"));
+    }
+  } catch {}
+  return {};
+}
+
+function saveLimitsData(data: Record<string, { date: string; count: number }>) {
+  try {
+    const resultsDir = path.join(process.cwd(), "public", "results");
+    if (!fs.existsSync(resultsDir))
+      fs.mkdirSync(resultsDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(resultsDir, "rate_limits.json"),
+      JSON.stringify(data, null, 2),
+    );
+  } catch {}
+}
+
+// ----------------- AI RESPONSE PARSER -----------------
 function extractImageB64FromChat(json: any): string {
   const choice = json.choices?.[0];
   if (!choice) throw new Error("پاسخ معتبری از هوش مصنوعی دریافت نشد.");
-  if (choice.finish_reason === "content_filter")
+  if (choice.finish_reason === "content_filter") {
     throw new Error("CONTENT_FILTER_TRIGGERED");
+  }
 
   const message = choice.message || {};
+
+  // 1. message.images array
   if (message.images?.[0]?.image_url?.url) {
     const url: string = message.images[0].image_url.url;
     if (url.startsWith("data:")) return url.split(",")[1] || "";
   }
+
+  // 2. message.content array
   if (Array.isArray(message.content)) {
     for (const part of message.content) {
       if (part.type === "image_url" && part.image_url?.url) {
@@ -67,15 +123,19 @@ function extractImageB64FromChat(json: any): string {
       }
     }
   }
+
+  // 3. message.content string
   if (typeof message.content === "string") {
     const match = message.content.match(
       /data:image\/\w+;base64,([A-Za-z0-9+/=]+)/,
     );
     if (match) return match[1];
   }
-  throw new Error("تصویر خروجی یافت نشد.");
+
+  throw new Error("تصویر خروجی در پاسخ مدل یافت نشد.");
 }
 
+// ----------------- MODEL API CALLER -----------------
 async function callModelApi(
   model: string,
   personDataUrl: string,
@@ -125,13 +185,18 @@ async function callModelApi(
 
     addLog(
       "INFO",
-      `[${model}] Response HTTP ${res.status} in ${Date.now() - startTime}ms`,
+      `[${model}] HTTP ${res.status} returned in ${Date.now() - startTime}ms`,
     );
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+
+    if (!res.ok) {
+      const errBody = await res.text();
+      throw new Error(`HTTP ${res.status}: ${errBody}`);
+    }
 
     const data = await res.json();
     return Buffer.from(extractImageB64FromChat(data), "base64");
   } else {
+    // gpt-image-2 (Edits endpoint)
     const payload = {
       model,
       prompt: PROMPT,
@@ -150,32 +215,67 @@ async function callModelApi(
 
     addLog(
       "INFO",
-      `[${model}] Response HTTP ${res.status} in ${Date.now() - startTime}ms`,
+      `[${model}] HTTP ${res.status} returned in ${Date.now() - startTime}ms`,
     );
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+
+    if (!res.ok) {
+      const errBody = await res.text();
+      throw new Error(`HTTP ${res.status}: ${errBody}`);
+    }
 
     const data = await res.json();
     const item = data.data?.[0];
-    if (item?.b64_json) return Buffer.from(item.b64_json, "base64");
+
+    if (item?.b64_json) {
+      return Buffer.from(item.b64_json, "base64");
+    }
+
     if (item?.url) {
-      if (item.url.startsWith("data:"))
+      if (item.url.startsWith("data:")) {
         return Buffer.from(item.url.split(",")[1], "base64");
-      const imgRes = await fetch(item.url);
+      }
+      const imgRes = await fetch(item.url, {
+        signal: AbortSignal.timeout(30000),
+      });
       return Buffer.from(await imgRes.arrayBuffer());
     }
+
     throw new Error("خروجی معتبری دریافت نشد.");
   }
 }
 
+// ----------------- MAIN POST ROUTE -----------------
 export async function POST(req: NextRequest) {
   const reqStart = Date.now();
+  const today = new Date().toISOString().slice(0, 10);
+  const { userKey, newCookie } = getUserKey(req);
+
   addLog(
     "INFO",
-    `👉 Incoming POST /api/try-on from IP: ${req.headers.get("x-real-ip") || "unknown"}`,
+    `👉 POST /api/try-on received from IP: ${req.headers.get("x-real-ip") || "unknown"}`,
   );
 
   try {
-    const { userKey, newCookie } = getUserKey(req);
+    // 1. Check Rate Limits
+    const limitsData = getLimitsData();
+    const userRecord = limitsData[userKey];
+    const currentCount =
+      userRecord && userRecord.date === today ? userRecord.count : 0;
+
+    if (currentCount >= DAILY_LIMIT) {
+      addLog("WARN", `Rate limit exceeded for user: ${userKey}`);
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "شما به سقف مجاز روزانه (۴ بار پرو در روز) رسیده‌اید. لطفاً فردا مجدداً تلاش کنید.",
+          remaining_tries: 0,
+        },
+        { status: 429 },
+      );
+    }
+
+    // 2. Parse & Validate Payload
     const body = await req.json();
     const { person_image_base64, garment_url } = body;
 
@@ -187,16 +287,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Strictly normalize person image Base64
+    const personDataUrl = cleanAndNormalizeDataUrl(person_image_base64);
     addLog(
       "INFO",
-      `Payload size: ~${Math.round(person_image_base64.length / 1024)} KB. Target: ${garment_url}`,
+      `Person image verified: ~${Math.round(personDataUrl.length / 1024)} KB`,
     );
 
-    const personDataUrl = person_image_base64.startsWith("data:")
-      ? person_image_base64
-      : `data:image/jpeg;base64,${person_image_base64}`;
-
-    // Read Garment
+    // 3. Resolve Garment Image to Base64
     let garmentDataUrl = "";
     const cleanGarmentPath = (garment_url || "/garments/garment-1.jpg").replace(
       /^\//,
@@ -210,20 +308,26 @@ export async function POST(req: NextRequest) {
 
     if (fs.existsSync(localGarmentPath)) {
       const gBuf = fs.readFileSync(localGarmentPath);
-      garmentDataUrl = `data:image/jpeg;base64,${gBuf.toString("base64")}`;
+      const ext =
+        path.extname(cleanGarmentPath).toLowerCase().replace(".", "") || "jpeg";
+      const mime = ext === "png" ? "image/png" : "image/jpeg";
+      garmentDataUrl = `data:${mime};base64,${gBuf.toString("base64")}`;
     } else {
       addLog(
         "WARN",
-        `Garment not found locally at ${localGarmentPath}, attempting fetch`,
+        `Garment not found locally at ${localGarmentPath}, fetching via origin`,
       );
       const origin = req.nextUrl.origin;
-      const gRes = await fetch(`${origin}/${cleanGarmentPath}`);
+      const gRes = await fetch(`${origin}/${cleanGarmentPath}`, {
+        signal: AbortSignal.timeout(15000),
+      });
       const gBuf = Buffer.from(await gRes.arrayBuffer());
       garmentDataUrl = `data:image/jpeg;base64,${gBuf.toString("base64")}`;
     }
 
     let lastError = "";
 
+    // 4. Model Pipeline Execution
     for (const model of MODELS_PRIORITY) {
       try {
         const resultBuffer = await callModelApi(
@@ -233,11 +337,17 @@ export async function POST(req: NextRequest) {
         );
         addLog(
           "INFO",
-          `🎉 Success with ${model} in ${Date.now() - reqStart}ms`,
+          `🎉 Try-on succeeded with model [${model}] in ${Date.now() - reqStart}ms`,
         );
 
-        // Save session safely
-        // Save session safely
+        // Deduct Limit on Success
+        const updatedCount = currentCount + 1;
+        limitsData[userKey] = { date: today, count: updatedCount };
+        saveLimitsData(limitsData);
+
+        const remainingTries = Math.max(0, DAILY_LIMIT - updatedCount);
+
+        // 5. Save Test Session Safely
         try {
           const resultDir = path.join(process.cwd(), "public", "results");
           if (!fs.existsSync(resultDir))
@@ -280,15 +390,15 @@ export async function POST(req: NextRequest) {
             path.join(resultDir, `session_${sessionId}_meta.json`),
             JSON.stringify(sessionMeta, null, 2),
           );
-        } catch (e: any) {
-          addLog("WARN", `Non-fatal disk write error: ${e.message}`);
+        } catch (fsErr: any) {
+          addLog("WARN", `Non-fatal disk write notice: ${fsErr.message}`);
         }
 
         const response = NextResponse.json({
           success: true,
           message: "پرو لباس با موفقیت انجام شد.",
           model_used: model,
-          remaining_tries: 3,
+          remaining_tries: remainingTries,
           result_image: `data:image/png;base64,${resultBuffer.toString("base64")}`,
         });
 
@@ -299,8 +409,10 @@ export async function POST(req: NextRequest) {
             httpOnly: true,
             maxAge: 60 * 60 * 24 * 365,
             path: "/",
+            sameSite: "lax",
           });
         }
+
         return response;
       } catch (err: any) {
         lastError = err.message;
@@ -308,8 +420,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const farsiMsg = lastError.includes("CONTENT_FILTER_TRIGGERED")
+      ? "تصویر ارسالی توسط فیلتر هوشمند مسدود شد. لطفاً از تصویر دیگری با پوشش مناسب‌تر استفاده کنید."
+      : `خطا در پردازش تصویر توسط هوش مصنوعی: ${lastError}`;
+
     return NextResponse.json(
-      { success: false, message: `خطا در پردازش هوش مصنوعی: ${lastError}` },
+      { success: false, message: farsiMsg },
       { status: 422 },
     );
   } catch (error: any) {
