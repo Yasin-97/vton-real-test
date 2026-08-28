@@ -237,10 +237,12 @@ export async function POST(req: NextRequest) {
         );
 
         // Save session safely
+        // Save session safely
         try {
           const resultDir = path.join(process.cwd(), "public", "results");
           if (!fs.existsSync(resultDir))
             fs.mkdirSync(resultDir, { recursive: true });
+
           const sessionId = `${Date.now()}_${crypto.randomBytes(3).toString("hex")}`;
           const personBuffer = Buffer.from(
             personDataUrl.split(",")[1],
@@ -263,21 +265,20 @@ export async function POST(req: NextRequest) {
             path.join(resultDir, `session_${sessionId}_result.png`),
             resultBuffer,
           );
+
+          const sessionMeta = {
+            id: sessionId,
+            personUrl: `/results/session_${sessionId}_person.jpg`,
+            garmentUrl: `/results/session_${sessionId}_garment.jpg`,
+            resultUrl: `/results/session_${sessionId}_result.png`,
+            modelUsed: model,
+            userKey,
+            createdAt: new Date().toISOString(),
+          };
+
           fs.writeFileSync(
             path.join(resultDir, `session_${sessionId}_meta.json`),
-            JSON.stringify(
-              {
-                id: sessionId,
-                personUrl: `/results/session_${sessionId}_person.jpg`,
-                garmentUrl: `/results/session_${sessionId}_garment.jpg`,
-                resultUrl: `/results/session_${sessionId}_result.png`,
-                modelUsed: model,
-                userKey,
-                createdAt: new Date().toISOString(),
-              },
-              null,
-              2,
-            ),
+            JSON.stringify(sessionMeta, null, 2),
           );
         } catch (e: any) {
           addLog("WARN", `Non-fatal disk write error: ${e.message}`);
