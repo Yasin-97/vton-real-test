@@ -24,6 +24,7 @@ interface ProductItem {
   title: string;
   category: string;
   price: number;
+  tags: string[];
   priceFormatted: string;
   oldPrice: string;
   discount: string;
@@ -48,8 +49,16 @@ const PRODUCTS: ProductItem[] = [
     reviewsCount: 68,
     sku: "SET-LILAC-01",
     image: "/garments/garment-1.jpg",
-    description:
-      "ست کژوال بسیار شیک و خنک شامل پیراهن رویه لنین ارگانیک رنگ یاسی پاستلی، زیرپیراهنی پنبه‌ای سفید و شلوار کتان بنددار کرم شیری با تن‌خور آزاد و بسیار راحت.",
+    tags: [
+      "3-piece complete outfit",
+      "open pastel lilac linen overshirt",
+      "plain white inner crewneck t-shirt",
+      "relaxed cream linen drawstring trousers",
+      "rolled-up sleeves",
+      "untucked flowy drape",
+      "retro white sneakers",
+    ],
+    description: "ست کژوال بسیار شیک و خنک...",
     badge: "پرفروش‌ترین ست فصل",
   },
   {
@@ -64,8 +73,15 @@ const PRODUCTS: ProductItem[] = [
     reviewsCount: 44,
     sku: "STR-BLUE-02",
     image: "/garments/garment-2.jpg",
-    description:
-      "استایل ترند لش و خیابانی با تی‌شرت اورسایز ۲۸۰ گرم پنبه‌ای با چاپ گلدوزی مینیمال Rise Above به همراه شلوار جین بگ زغالی سنگ‌شور شده بدون تغییر رنگ.",
+    tags: [
+      "2-piece streetwear outfit",
+      "drop-shoulder oversized sky blue graphic tee",
+      "heavyweight 280gsm cotton",
+      "washed charcoal baggy wide-leg denim jeans",
+      "untucked boxy silhouette",
+      "chunky white sneakers",
+    ],
+    description: "استایل ترند لش و خیابانی...",
     badge: "ترند اینستاگرام",
   },
   {
@@ -80,8 +96,16 @@ const PRODUCTS: ProductItem[] = [
     reviewsCount: 92,
     sku: "SHIRT-OXF-03",
     image: "/garments/garment-3.jpg",
-    description:
-      "پیراهن اداری و مجلسی خوش‌دوخت با پارچه ۱۰۰٪ آکسفورد ترک ضد چروک با لوگوی گلدوزی شده ظریف پولو. مناسب استایل‌های رسمی و نیمه‌رسمی.",
+    tags: [
+      "standalone formal-casual shirt",
+      "regular-fit Oxford cotton button-down",
+      "sky blue color",
+      "rolled-up cuffs",
+      "unbuttoned collar",
+      "structured tailored fit",
+      "embroidered chest pony logo",
+    ],
+    description: "پیراهن اداری و مجلسی خوش‌دوخت...",
     badge: "گارانتی اصالت پارچه",
   },
   {
@@ -95,9 +119,15 @@ const PRODUCTS: ProductItem[] = [
     rating: 4.9,
     reviewsCount: 51,
     sku: "SET-LIME-04",
-    image: "/garments/garment-3.png",
-    description:
-      "ترکیب چشم‌نواز پیراهن سبک پاستلی رنگ لیمویی-پسته‌ای با بافت لطیف نخی به همراه شلوار جین واید پاییزه سفید یخچالی با دوخت صنعتی دوبل.",
+    image: "/garments/garment-4.jpg",
+    tags: [
+      "2-piece minimalist outfit",
+      "relaxed pastel pistachio green cotton shirt",
+      "clean crisp white wide-leg denim jeans",
+      "rolled-up sleeves",
+      "loose breathable cotton drape",
+    ],
+    description: "ترکیب چشم‌نواز پیراهن سبک پاستلی...",
     badge: "کالکشن جدید",
   },
 ];
@@ -299,6 +329,7 @@ export default function ProductPage() {
         body: JSON.stringify({
           person_image_base64: userPhotoPreview,
           garment_url: selectedProduct.image,
+          garment_tags: selectedProduct.tags,
         }),
       });
 

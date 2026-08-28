@@ -21,34 +21,48 @@ const MODELS_PRIORITY = [
   "gemini-3.1-flash-image",
 ];
 
-const PROMPT =
-  // ROLE
-  "Act as a professional post-production retoucher for a fashion e-commerce studio performing a virtual garment try-on composite. " +
-  // TASK
-  "You are given two images. Image 1 is a photograph of a real person — the identity and scene reference. Image 2 shows a garment or outfit on its own — the apparel reference only. " +
-  "Generate one new photograph of the exact person from Image 1, wearing the exact garment(s) from Image 2, as if photographed together in a single real photoshoot. Prioritize extreme photographic naturalness over stylization — this must be indistinguishable from an unedited photo. " +
-  // CORE PRINCIPLE — the general rule, not a tattoo-specific one
-  "CORE PRINCIPLE — treat Image 1 as ground truth for everything except the garment area being replaced. Never invent, add, remove, smooth over, or guess at any physical detail — skin marks, body shape, proportions, texture, asymmetries — that isn't visible and verifiable in Image 1. If something is ambiguous or not visible in Image 1, render it plainly/neutrally rather than inventing detail. " +
-  // GARMENT SCOPE — model infers coverage itself
-  "GARMENT SCOPE INFERENCE — there is no metadata telling you what the garment covers. Determine this yourself from Image 2: is it a top only, bottom only, full-body piece (dress, jumpsuit, romper), an outer layer worn over other clothing, footwear, or an accessory. Replace ONLY the body region(s) the Image 2 garment actually occupies. Every part of the person's body, clothing, and accessories outside that region must remain exactly as shown in Image 1 — do not restyle, recolor, or regenerate anything you weren't asked to change. " +
-  // FIT & SILHOUETTE — model infers fit character itself
-  "FIT AND SILHOUETTE INFERENCE — study how the garment sits in Image 2 itself before placing it on the person: is it loose/oversized/relaxed, fitted/bodycon/second-skin, structured/tailored/stiff, or soft/flowy with fluid movement. Reproduce that exact fit character on the person's actual body — do not normalize a loose garment into a tight one or vice versa, and do not default to a generic 'flattering' fit. The garment should hang, cling, or structure itself on this specific body exactly the way its own fabric and cut dictate, adjusted only for this person's proportions and pose. " +
-  // FABRIC PHYSICS — tied to the inferred fit
-  "FABRIC PHYSICS — render drape, tension, and folds consistent with both the inferred fit and the fabric type visible in Image 2 (denim, knit, silk, leather, cotton, etc.). Loose fabric should show soft gathering and gravity-driven folds; tight fabric should show tension lines and body-hugging contours; structured fabric should hold its own shape at collars/cuffs/hems rather than draping like soft fabric. Shadows and highlights on the garment must match Image 1's existing light source and direction exactly. " +
-  // IDENTITY LOCK
-  "IDENTITY LOCK — keep unchanged from Image 1: facial structure and expression, exact skin tone and texture, body shape and proportions, pose and posture, hand and finger position, hairstyle and hair color, and framing/crop. Do not beautify, slim, age, or idealize the person. " +
-  // NEWLY EXPOSED OR NEWLY COVERED SKIN — general, not example-specific
-  "SKIN VISIBILITY CHANGES — if the new garment's silhouette exposes skin that was covered in Image 1, render that skin plainly, matching tone and texture from the nearest visible skin on the same body part in Image 1 — do not add anything new to it. If the new garment covers skin that was visible in Image 1 (including any marks, tattoos, or accessories on it), simply let the garment cover it naturally; do not let covered details show through fabric. " +
-  // ACCESSORIES
-  "ACCESSORY REPLACEMENT — only if Image 2 explicitly includes an accessory (watch, eyewear, jewelry, belt, hat, bag, shoes), replace the person's existing item in that same category, scaled to their proportions. If Image 2 shows no accessories, change none. " +
-  // SCENE INTEGRITY
-  "SCENE INTEGRITY — keep background, lighting direction and color temperature, camera angle, focal length, and framing identical to Image 1. This is a garment swap, not a new photoshoot. " +
-  // CLEANUP
-  "SOURCE CLEANUP — exclude anything from Image 2 that isn't the garment itself: hangers, mannequin parts, model's hands, price tags, brand stickers. " +
-  // OUTPUT
-  "OUTPUT — one photorealistic photograph, same aspect ratio and resolution as Image 1, anatomically correct hands and limbs, no text/watermarks/collage panels, no visible compositing seams or blending artifacts. " +
-  // NEGATIVE CONSTRAINTS
-  "DO NOT: alter identity, body shape, proportions, or pose; add or remove any physical detail not visible in Image 1; apply a fit or drape that contradicts how the garment actually looks in Image 2; touch any body region or clothing item outside the garment's actual scope; change background or lighting; leave tags, hangers, or extraneous hands in frame; output more than one image or any text.";
+// ----------------- DYNAMIC PROMPT BUILDER WITH TAGS -----------------
+function buildVtonPrompt(garmentTags: string[] = []): string {
+  const tagsDirective =
+    garmentTags.length > 0
+      ? "EXPLICIT GARMENT DIRECTIVES & STYLING TAGS — " +
+        `Apply these confirmed garment specifications, fit characteristics, and styling rules strictly: [${garmentTags.join("; ")}]. ` +
+        "When explicit directives are provided (such as layering rules, rolled sleeves, unbuttoned collar, tucking state, or silhouette cut), prioritize them as ground truth alongside Image 2. "
+      : "";
+
+  return (
+    // ROLE
+    "Act as a professional post-production retoucher for a fashion e-commerce studio performing a virtual garment try-on composite. " +
+    // TASK
+    "You are given two images. Image 1 is a photograph of a real person — the identity and scene reference. Image 2 shows a garment or outfit on its own — the apparel reference only. " +
+    "Generate one new photograph of the exact person from Image 1, wearing the exact garment(s) from Image 2, as if photographed together in a single real photoshoot. Prioritize extreme photographic naturalness over stylization — this must be indistinguishable from an unedited photo. " +
+    // EXPLICIT TAGS & STYLING DIRECTIVES
+    tagsDirective +
+    // CORE PRINCIPLE
+    "CORE PRINCIPLE — treat Image 1 as ground truth for everything except the garment area being replaced. Never invent, add, remove, smooth over, or guess at any physical detail — skin marks, body shape, proportions, texture, asymmetries — that isn't visible and verifiable in Image 1. If something is ambiguous or not visible in Image 1, render it plainly/neutrally rather than inventing detail. " +
+    // GARMENT SCOPE
+    "GARMENT SCOPE INFERENCE — determine the coverage from Image 2 and any explicit tags provided: whether it is a top only, bottom only, full outfit/suit/set, outer layer worn over other clothing, footwear, or accessory. Replace ONLY the body region(s) the Image 2 garment actually occupies. Every part of the person's body, clothing, and accessories outside that region must remain exactly as shown in Image 1 — do not restyle, recolor, or regenerate anything you weren't asked to change. " +
+    // FIT & SILHOUETTE
+    "FIT AND SILHOUETTE INFERENCE — study how the garment sits in Image 2 along with any specified styling tags: whether it is loose/oversized/relaxed, fitted/bodycon/second-skin, structured/tailored/stiff, or soft/flowy with fluid movement. Reproduce that exact fit character on the person's actual body — do not normalize a loose garment into a tight one or vice versa, and do not default to a generic 'flattering' fit. The garment should hang, cling, or structure itself on this specific body exactly the way its own fabric, cut, and tags dictate, adjusted only for this person's proportions and pose. " +
+    // FABRIC PHYSICS
+    "FABRIC PHYSICS — render drape, tension, and folds consistent with both the inferred fit, explicit tags, and the fabric type visible in Image 2 (denim, knit, silk, leather, linen, cotton, etc.). Loose fabric should show soft gathering and gravity-driven folds; tight fabric should show tension lines and body-hugging contours; structured fabric should hold its own shape at collars/cuffs/hems rather than draping like soft fabric. Shadows and highlights on the garment must match Image 1's existing light source and direction exactly. " +
+    // IDENTITY LOCK
+    "IDENTITY LOCK — keep unchanged from Image 1: facial structure and expression, exact skin tone and texture, body shape and proportions, pose and posture, hand and finger position, hairstyle and hair color, and framing/crop. Do not beautify, slim, age, or idealize the person. " +
+    // SKIN VISIBILITY CHANGES
+    "SKIN VISIBILITY CHANGES — if the new garment's silhouette exposes skin that was covered in Image 1, render that skin plainly, matching tone and texture from the nearest visible skin on the same body part in Image 1 — do not add anything new to it. If the new garment covers skin that was visible in Image 1 (including any marks, tattoos, or accessories on it), simply let the garment cover it naturally; do not let covered details show through fabric. " +
+    // ACCESSORIES
+    "ACCESSORY REPLACEMENT — only if Image 2 explicitly includes an accessory (watch, eyewear, jewelry, belt, hat, bag, shoes), replace the person's existing item in that same category, scaled to their proportions. If Image 2 shows no accessories, change none. " +
+    // SCENE INTEGRITY
+    "SCENE INTEGRITY — keep background, lighting direction and color temperature, camera angle, focal length, and framing identical to Image 1. This is a garment swap, not a new photoshoot. " +
+    // CLEANUP
+    "SOURCE CLEANUP — exclude anything from Image 2 that isn't the garment itself: hangers, mannequin parts, model's hands, price tags, brand stickers. " +
+    // OUTPUT
+    "OUTPUT — one photorealistic photograph, same aspect ratio and resolution as Image 1, anatomically correct hands and limbs, no text/watermarks/collage panels, no visible compositing seams or blending artifacts. " +
+    // NEGATIVE CONSTRAINTS
+    "DO NOT: alter identity, body shape, proportions, or pose; add or remove any physical detail not visible in Image 1; apply a fit or drape that contradicts how the garment actually looks in Image 2 or its explicit tags; touch any body region or clothing item outside the garment's actual scope; change background or lighting; leave tags, hangers, or extraneous hands in frame; output more than one image or any text."
+  );
+}
+
 // ----------------- BASE64 SANITIZER & VALIDATOR -----------------
 function cleanAndNormalizeDataUrl(raw: string): string {
   if (!raw || typeof raw !== "string") {
@@ -95,10 +109,8 @@ function getUserKey(req: NextRequest): { userKey: string; newCookie?: string } {
 
 function getLimitsData(): Record<string, { date: string; count: number }> {
   try {
-    const resultsDir = path.join(process.cwd(), "public", "results");
-    if (!fs.existsSync(resultsDir))
-      fs.mkdirSync(resultsDir, { recursive: true });
-    const rateLimitFile = path.join(resultsDir, "rate_limits.json");
+    const storageDir = getStorageDir();
+    const rateLimitFile = path.join(storageDir, "rate_limits.json");
     if (fs.existsSync(rateLimitFile)) {
       return JSON.parse(fs.readFileSync(rateLimitFile, "utf-8"));
     }
@@ -108,13 +120,9 @@ function getLimitsData(): Record<string, { date: string; count: number }> {
 
 function saveLimitsData(data: Record<string, { date: string; count: number }>) {
   try {
-    const resultsDir = path.join(process.cwd(), "public", "results");
-    if (!fs.existsSync(resultsDir))
-      fs.mkdirSync(resultsDir, { recursive: true });
-    fs.writeFileSync(
-      path.join(resultsDir, "rate_limits.json"),
-      JSON.stringify(data, null, 2),
-    );
+    const storageDir = getStorageDir();
+    const rateLimitFile = path.join(storageDir, "rate_limits.json");
+    fs.writeFileSync(rateLimitFile, JSON.stringify(data, null, 2));
   } catch {}
 }
 
@@ -160,6 +168,7 @@ async function callModelApi(
   model: string,
   personDataUrl: string,
   garmentDataUrl: string,
+  promptText: string,
 ): Promise<Buffer> {
   const headers = {
     "Content-Type": "application/json",
@@ -176,7 +185,7 @@ async function callModelApi(
         {
           role: "user",
           content: [
-            { type: "text", text: PROMPT },
+            { type: "text", text: promptText },
             { type: "image_url", image_url: { url: personDataUrl } },
             { type: "image_url", image_url: { url: garmentDataUrl } },
           ],
@@ -219,7 +228,7 @@ async function callModelApi(
     // gpt-image-2 (Edits endpoint)
     const payload = {
       model,
-      prompt: PROMPT,
+      prompt: promptText,
       images: [{ image_url: personDataUrl }, { image_url: garmentDataUrl }],
       size: "1024x1024",
       quality: "medium",
@@ -297,7 +306,7 @@ export async function POST(req: NextRequest) {
 
     // 2. Parse & Validate Payload
     const body = await req.json();
-    const { person_image_base64, garment_url } = body;
+    const { person_image_base64, garment_url, garment_tags } = body;
 
     if (!person_image_base64) {
       addLog("WARN", "Missing person_image_base64 in request body");
@@ -306,6 +315,11 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
+
+    // Generate Custom Prompt with Tags
+    const promptText = buildVtonPrompt(
+      Array.isArray(garment_tags) ? garment_tags : [],
+    );
 
     // Strictly normalize person image Base64
     const personDataUrl = cleanAndNormalizeDataUrl(person_image_base64);
@@ -354,6 +368,7 @@ export async function POST(req: NextRequest) {
           model,
           personDataUrl,
           garmentDataUrl,
+          promptText,
         );
         addLog(
           "INFO",
@@ -367,12 +382,9 @@ export async function POST(req: NextRequest) {
 
         const remainingTries = Math.max(0, DAILY_LIMIT - updatedCount);
 
-        // 5. Save Test Session Safely
+        // 5. Save Test Session on Disk (/data or fallback)
         try {
-          const resultDir = path.join(process.cwd(), "public", "results");
-          if (!fs.existsSync(resultDir))
-            fs.mkdirSync(resultDir, { recursive: true });
-
+          const storageDir = getStorageDir();
           const sessionId = `${Date.now()}_${crypto.randomBytes(3).toString("hex")}`;
           const personBuffer = Buffer.from(
             personDataUrl.split(",")[1],
@@ -384,15 +396,15 @@ export async function POST(req: NextRequest) {
           );
 
           fs.writeFileSync(
-            path.join(resultDir, `session_${sessionId}_person.jpg`),
+            path.join(storageDir, `session_${sessionId}_person.jpg`),
             personBuffer,
           );
           fs.writeFileSync(
-            path.join(resultDir, `session_${sessionId}_garment.jpg`),
+            path.join(storageDir, `session_${sessionId}_garment.jpg`),
             garmentBuffer,
           );
           fs.writeFileSync(
-            path.join(resultDir, `session_${sessionId}_result.png`),
+            path.join(storageDir, `session_${sessionId}_result.png`),
             resultBuffer,
           );
 
@@ -403,11 +415,12 @@ export async function POST(req: NextRequest) {
             resultUrl: `/api/media/session_${sessionId}_result.png`,
             modelUsed: model,
             userKey,
+            tags: garment_tags || [],
             createdAt: new Date().toISOString(),
           };
 
           fs.writeFileSync(
-            path.join(resultDir, `session_${sessionId}_meta.json`),
+            path.join(storageDir, `session_${sessionId}_meta.json`),
             JSON.stringify(sessionMeta, null, 2),
           );
         } catch (fsErr: any) {
@@ -435,7 +448,6 @@ export async function POST(req: NextRequest) {
 
         return response;
       } catch (err: any) {
-        // Extract deep Node.js fetch failure details (socket reset, timeout, DNS, etc.)
         const causeDetail = err?.cause
           ? ` (Cause: ${err.cause.code || err.cause.message || JSON.stringify(err.cause)})`
           : "";
