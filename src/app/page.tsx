@@ -176,12 +176,66 @@ export default function ProductPage() {
     0,
   );
 
-  // VTON Handlers
-  const handleUserPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Helper to resize/compress image in browser
+  const compressImage = (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 1024;
+          const MAX_HEIGHT = 1024;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressed = new File([blob], file.name, {
+                  type: "image/jpeg",
+                  lastModified: Date.now(),
+                });
+                resolve(compressed);
+              } else {
+                resolve(file);
+              }
+            },
+            "image/jpeg",
+            0.85,
+          );
+        };
+      };
+    });
+  };
+
+  const handleUserPhotoChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     if (e.target.files?.[0]) {
       const file = e.target.files[0];
-      setUserPhoto(file);
-      setUserPhotoPreview(URL.createObjectURL(file));
+      const compressedFile = await compressImage(file);
+      setUserPhoto(compressedFile);
+      setUserPhotoPreview(URL.createObjectURL(compressedFile));
       setErrorMsg(null);
     }
   };
