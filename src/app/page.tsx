@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Sparkles,
   ShoppingBag,
@@ -10,7 +10,6 @@ import {
   RotateCcw,
   X,
   Upload,
-  RefreshCw,
   Download,
   Plus,
   Minus,
@@ -142,6 +141,218 @@ interface CartItem {
   price: number;
   image: string;
   quantity: number;
+}
+
+// ----------------- CANVAS "AI STITCHING" LOADER -----------------
+// Theme: an AI thread-loom assembling a garment silhouette. Ties directly to
+// what's actually happening (fabric being fitted to a body) instead of a
+// generic spinner, and reuses the page's own palette (zinc-950 / blue-600 →
+// indigo-600 / amber-300 spark) so it reads as part of the same product.
+const LOOM_MESSAGES = [
+  "در حال تحلیل تصویر شما...",
+  "در حال شناسایی فرم و حالت بدن...",
+  "در حال تطبیق نور و زاویه دوربین...",
+  "در حال شبیه‌سازی افتادگی پارچه...",
+  "در حال هماهنگ‌سازی رنگ و سایه‌ها...",
+  "🧵 در حال دوختن جزئیات نهایی...",
+  "در حال رندر تصویر نهایی...",
+  "کمی بیشتر طول می‌کشد، در حال تکمیل ظرافت‌هاست...",
+];
+
+function TryOnLoadingCanvas() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [msgIndex, setMsgIndex] = useState(0);
+  const [progress, setProgress] = useState(6);
+
+  // Canvas animation loop
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const size = 200; // logical CSS pixels
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width = `${size}px`;
+    canvas.style.height = `${size}px`;
+    ctx.scale(dpr, dpr);
+
+    const cx = size / 2;
+    const cy = size / 2;
+    const R = 42; // garment silhouette scale
+
+    // Simple T-shirt silhouette as points relative to center, scaled by R
+    const pts: [number, number][] = [
+      [-0.15 * R, -0.92 * R], // neck left
+      [-0.55 * R, -0.74 * R], // shoulder left
+      [-0.95 * R, -0.32 * R], // sleeve left, outer
+      [-0.56 * R, -0.12 * R], // sleeve left, inner
+      [-0.5 * R, -0.02 * R], // underarm left
+      [-0.5 * R, 0.9 * R], // hem left
+      [0.5 * R, 0.9 * R], // hem right
+      [0.5 * R, -0.02 * R], // underarm right
+      [0.56 * R, -0.12 * R], // sleeve right, inner
+      [0.95 * R, -0.32 * R], // sleeve right, outer
+      [0.55 * R, -0.74 * R], // shoulder right
+      [0.15 * R, -0.92 * R], // neck right
+    ];
+    const buildGarmentPath = () => {
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+      ctx.quadraticCurveTo(0, -0.62 * R, pts[0][0], pts[0][1]);
+      ctx.closePath();
+    };
+
+    const palette = ["59,130,246", "99,102,241", "99,102,241", "252,211,77"];
+    const particles = Array.from({ length: 42 }, () => ({
+      angle: Math.random() * Math.PI * 2,
+      radius: 58 + Math.random() * 38,
+      speed: 0.15 + Math.random() * 0.35,
+      size: 1 + Math.random() * 1.8,
+      phase: Math.random() * Math.PI * 2,
+      hue: palette[Math.floor(Math.random() * palette.length)],
+    }));
+
+    const start = performance.now();
+    let raf = 0;
+
+    const draw = (now: number) => {
+      const t = (now - start) / 1000;
+      ctx.clearRect(0, 0, size, size);
+
+      // ambient pulsing glow
+      const glowR = 70 + Math.sin(t * 1.2) * 6;
+      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
+      glow.addColorStop(0, "rgba(79,70,229,0.35)");
+      glow.addColorStop(1, "rgba(79,70,229,0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
+      ctx.fill();
+
+      // outer rotating dashed ring
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(t * 0.6);
+      ctx.beginPath();
+      ctx.setLineDash([6, 10]);
+      ctx.lineDashOffset = -t * 30;
+      ctx.strokeStyle = "rgba(96,165,250,0.55)";
+      ctx.lineWidth = 1.5;
+      ctx.arc(0, 0, 88, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      // inner rotating ring, opposite direction
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(-t * 0.9);
+      ctx.beginPath();
+      ctx.setLineDash([3, 8]);
+      ctx.strokeStyle = "rgba(129,140,248,0.4)";
+      ctx.lineWidth = 1;
+      ctx.arc(0, 0, 74, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      // orbiting thread particles
+      particles.forEach((p) => {
+        p.angle += p.speed * 0.02;
+        const x = cx + Math.cos(p.angle) * p.radius;
+        const y = cy + Math.sin(p.angle) * p.radius * 0.55;
+        const twinkle = 0.35 + 0.65 * Math.abs(Math.sin(t * 2 + p.phase));
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(${p.hue},${twinkle})`;
+        ctx.arc(x, y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      const breathe = 1 + Math.sin(t * 1.6) * 0.03;
+
+      // garment fill + animated "sewing" stroke reveal
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(breathe, breathe);
+      buildGarmentPath();
+      const fillGrad = ctx.createLinearGradient(0, -R, 0, R);
+      fillGrad.addColorStop(0, "rgba(96,165,250,0.18)");
+      fillGrad.addColorStop(1, "rgba(79,70,229,0.05)");
+      ctx.fillStyle = fillGrad;
+      ctx.fill();
+
+      const dashLen = 480;
+      ctx.setLineDash([dashLen * 0.55, dashLen * 1.2]);
+      ctx.lineDashOffset = -((t * 60) % (dashLen * 1.6));
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(147,197,253,0.9)";
+      ctx.stroke();
+      ctx.restore();
+
+      // fabric shimmer sweep, clipped to the garment silhouette
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(breathe, breathe);
+      buildGarmentPath();
+      ctx.clip();
+      const period = 2.4;
+      const phase = (t % period) / period;
+      const sweepX = -R * 1.4 + phase * (R * 2.8);
+      const shimmer = ctx.createLinearGradient(sweepX - 18, 0, sweepX + 18, 0);
+      shimmer.addColorStop(0, "rgba(255,255,255,0)");
+      shimmer.addColorStop(0.5, "rgba(255,255,255,0.35)");
+      shimmer.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = shimmer;
+      ctx.fillRect(-R, -R, R * 2, R * 2);
+      ctx.restore();
+
+      raf = requestAnimationFrame(draw);
+    };
+
+    raf = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  // Rotating status line
+  useEffect(() => {
+    const id = setInterval(() => {
+      setMsgIndex((i) => (i + 1) % LOOM_MESSAGES.length);
+    }, 3200);
+    return () => clearInterval(id);
+  }, []);
+
+  // Easing "fake" progress bar — decelerates toward ~94% and holds there
+  // until the real response swaps this view out, rather than promising a
+  // finish time we can't actually guarantee.
+  useEffect(() => {
+    const id = setInterval(() => {
+      setProgress((p) => (p < 94 ? p + (94 - p) * 0.06 : p));
+    }, 220);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div className="py-6 text-center">
+      <canvas ref={canvasRef} className="mx-auto block" aria-hidden="true" />
+      <h4
+        className="text-xs sm:text-sm font-bold text-zinc-200 mt-1 mb-1 min-h-[1.25rem]"
+        aria-live="polite"
+      >
+        {LOOM_MESSAGES[msgIndex]}
+      </h4>
+      <div className="w-full max-w-[220px] mx-auto h-1.5 bg-zinc-800 rounded-full overflow-hidden mt-3">
+        <div
+          className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-[width] duration-300 ease-out"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+      <p className="text-[10px] text-zinc-500 mt-2">
+        این فرآیند معمولاً بین ۱۵ تا ۵۰ ثانیه طول می‌کشد
+      </p>
+    </div>
+  );
 }
 
 export default function ProductPage() {
@@ -678,17 +889,7 @@ export default function ProductPage() {
                 </div>
               )}
 
-              {loading && (
-                <div className="py-10 text-center">
-                  <RefreshCw className="w-8 h-8 text-blue-400 animate-spin mx-auto mb-3" />
-                  <h4 className="text-xs sm:text-sm font-bold text-zinc-200 mb-1">
-                    در حال هوشمندسازی و پرو لباس...
-                  </h4>
-                  <p className="text-[10px] text-zinc-500">
-                    لطفاً ۱۰ الی ۲۵ ثانیه صبور باشید.
-                  </p>
-                </div>
-              )}
+              {loading && <TryOnLoadingCanvas />}
 
               {resultImg && (
                 <div>
