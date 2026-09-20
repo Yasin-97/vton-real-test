@@ -36,7 +36,7 @@ import {
 //   badge: string;
 // }
 
-export interface ProductItem {
+interface ProductItem {
   id: string;
   title: string;
   category: string;
@@ -55,7 +55,7 @@ export interface ProductItem {
   badge?: string;
 }
 
-export const PRODUCTS: ProductItem[] = [
+const PRODUCTS: ProductItem[] = [
   {
     id: "outfit-1",
     title: "ست ۳ تکه کژوال پیراهن لنین یاسی، تی‌شرت پنبه و شلوار کتان شیری",
@@ -143,8 +143,7 @@ export const PRODUCTS: ProductItem[] = [
   },
   {
     id: "outfit-4",
-    title:
-      "ست مینیمال پیراهن نخی سبز پسته‌ای پاستلی و شلوار پارچه‌ای آزاد سفید",
+    title: "ست مینیمال پیراهن نخی سبز پسته‌ای پاستلی همراه شلوار جین واید سفید",
     category:
       "pastel lime-green embroidered button-down shirt + high-rise straight-leg white jeans",
     price: 4860000,
