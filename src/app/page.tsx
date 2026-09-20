@@ -18,28 +18,49 @@ import {
   Tag,
 } from "lucide-react";
 
-interface ProductItem {
+// interface ProductItem {
+//   id: string;
+//   title: string;
+//   category: string;
+//   fit?: string | null;
+//   price: number;
+//   tags: string[];
+//   priceFormatted: string;
+//   oldPrice: string;
+//   discount: string;
+//   rating: number;
+//   reviewsCount: number;
+//   sku: string;
+//   image: string;
+//   description: string;
+//   badge: string;
+// }
+
+export interface ProductItem {
   id: string;
   title: string;
   category: string;
   price: number;
-  tags: string[];
   priceFormatted: string;
-  oldPrice: string;
-  discount: string;
+  oldPrice?: string;
+  discount?: string;
   rating: number;
   reviewsCount: number;
   sku: string;
   image: string;
-  description: string;
-  badge: string;
+  tags: string[];
+  description: string; // User-facing description (Persian)
+  fit: string; // For buildVtonPrompt (fit tag)
+  promptDescription: string; // Authoritative catalog description for buildVtonPrompt
+  badge?: string;
 }
 
-const PRODUCTS: ProductItem[] = [
+export const PRODUCTS: ProductItem[] = [
   {
     id: "outfit-1",
     title: "ست ۳ تکه کژوال پیراهن لنین یاسی، تی‌شرت پنبه و شلوار کتان شیری",
-    category: "ست کامل ۳ تکه تابستانه",
+    category:
+      "textured lavender overshirt + white crew-neck t-shirt + relaxed off-white drawstring pants + white low-top sneakers",
     price: 5130000,
     priceFormatted: "۵,۱۳۰,۰۰۰",
     oldPrice: "۶,۳۸۰,۰۰۰",
@@ -48,6 +69,9 @@ const PRODUCTS: ProductItem[] = [
     reviewsCount: 68,
     sku: "SET-LILAC-01",
     image: "/garments/garment-1.jpg",
+    fit: "relaxed straight fit",
+    promptDescription:
+      "Treat the outfit as four distinct wearable items: a light lavender textured long-sleeve button-front overshirt, a plain white crew-neck T-shirt underneath, relaxed straight-leg warm off-white/ecru drawstring pants, and white low-top lace-up sneakers with subtle light-gray side striping. The lavender overshirt has a relaxed, slightly loose silhouette with a conventional pointed shirt collar, full button placket, long sleeves rolled neatly to approximately the forearms, and a gently curved shirt hem. Keep the overshirt completely OPEN rather than buttoned, with the white T-shirt clearly visible underneath. Keep the white T-shirt untucked and naturally hanging below the open overshirt at the lower front; do not tuck it into the pants. The overshirt should fall freely over the waistband rather than being tucked. The pants have a comfortable relaxed straight-leg cut, a medium-to-high elasticized waist, an exposed matching drawstring tied at the front, and full-length legs. Keep the pants untucked and allow the hems to fall naturally toward the sneakers, with a very slight break and overlap over the upper shoe area rather than cropping above the footwear. The sneakers are clean white low-top lace-up athletic/casual shoes with white soles and subtle light-gray lateral stripe details. Preserve the lavender shirt as a pale cool lavender/lilac tone with visible irregular crinkled or puckered texture and soft matte fabric behavior; the material appears lightweight-to-medium weight, flexible, and naturally wrinkled rather than crisp or glossy. Preserve the T-shirt as solid clean white with a smooth lightweight cotton-knit appearance. Preserve the pants as warm ivory/off-white with a smooth matte woven cotton appearance, elastic waistband, matching drawcord, and minimal wrinkling. Preserve the sneakers as predominantly white with structured panels, white laces, white midsoles/outsoles, and restrained light-gray side accents. There is no visible text, lettering, graphic, logo, embroidery, or decorative typography on any of the garments or footwear; do not introduce any. Keep all garment proportions, colors, fabric textures, seams, buttons, collar shape, sleeve-roll position, drawstring construction, hems, and layering relationships faithful to the reference.",
     tags: [
       "3-piece complete outfit",
       "open pastel lilac linen overshirt",
@@ -64,7 +88,8 @@ const PRODUCTS: ProductItem[] = [
   {
     id: "outfit-2",
     title: "ست استریت‌ویر تی‌شرت اورسایز آبی آسمانی و شلوار جین بگ زغالی",
-    category: "ست خیابانی / Streetwear",
+    category:
+      "oversized light-blue graphic t-shirt + wide-leg washed-black jeans + white low-top sneakers",
     price: 4520000,
     priceFormatted: "۴,۵۲۰,۰۰۰",
     oldPrice: "۵,۶۶۰,۰۰۰",
@@ -73,6 +98,9 @@ const PRODUCTS: ProductItem[] = [
     reviewsCount: 44,
     sku: "STR-BLUE-02",
     image: "/garments/garment-2.jpg",
+    fit: "oversized relaxed",
+    promptDescription:
+      "Treat the outfit as three distinct wearable items: an oversized light-blue short-sleeve crew-neck T-shirt, wide-leg washed-black/charcoal jeans, and clean white low-top lace-up sneakers. The T-shirt has a relaxed oversized silhouette with broad shoulders, dropped shoulder seams, roomy short sleeves ending above the elbows, a ribbed crew neckline, and a straight slightly curved hem. Keep the T-shirt completely untucked and hanging freely OVER the jeans waistband, with the lower hem resting around the upper hip and partially covering the waistband; do not tuck, half-tuck, or crop the shirt. Preserve the natural loose drape and subtle bunching along the lower hem. The T-shirt is a soft pale sky-blue/cool powder-blue color with a smooth matte cotton-jersey appearance, medium-light visual weight, and gentle natural fabric folds rather than a stiff structure. On the center chest, reproduce the exact visible text 'RISE ABOVE' in uppercase, using a small thin modern sans-serif typeface in a pale white/light-gray tone; keep it subtle, horizontally centered, clean, and flat with no additional graphics or lettering. The jeans are relaxed wide-leg straight jeans in a deep washed charcoal/black tone, with a standard waistband, conventional front fly and pockets, roomy thighs, and a long straight leg that remains wide toward the ankle; preserve the slightly faded charcoal appearance and soft worn denim texture with restrained vertical and horizontal creasing. Keep the jeans worn normally at the waist beneath the untucked T-shirt. The jean hems extend fully to the footwear and sit directly over the tops of the sneakers with a slight natural break/stack at the ankle; do not cuff, crop, roll, or tuck the jeans into the shoes. The footwear consists of minimal white low-top lace-up sneakers with rounded toes, white laces, layered white leather/synthetic panels, and thick white rubber soles; maintain their clean monochromatic white appearance. Preserve the exact garment proportions, sleeve length, neckline, oversized volume, chest-text placement, blue color, denim wash, wide-leg silhouette, hem-to-shoe relationship, fabric weight, folds, seams, and overall styling without introducing additional accessories, graphics, logos, or text.",
     tags: [
       "2-piece streetwear outfit",
       "drop-shoulder oversized sky blue graphic tee",
@@ -88,7 +116,7 @@ const PRODUCTS: ProductItem[] = [
   {
     id: "outfit-3",
     title: "پیراهن کلاسیک آکسفورد تمام پنبه آبی آسمانی (طرح پولو)",
-    category: "پیراهن اسمارت کژوال",
+    category: "light-blue embroidered button-down shirt",
     price: 3380000,
     priceFormatted: "۳,۳۸۰,۰۰۰",
     oldPrice: "۴,۲۵۰,۰۰۰",
@@ -97,6 +125,9 @@ const PRODUCTS: ProductItem[] = [
     reviewsCount: 92,
     sku: "SHIRT-OXF-03",
     image: "/garments/garment-3.jpg",
+    fit: "regular relaxed",
+    promptDescription:
+      "Treat the garment as a single long-sleeve light-blue button-down shirt. Preserve its regular-to-relaxed silhouette with a straight, moderately roomy body, conventional shoulder construction, full-length sleeves rolled neatly to the forearms, and a curved shirttail hem. Use a classic button-down collar with pointed collar tips secured by small buttons; keep the collar flat and natural rather than popped. Keep the shirt worn as a single layer with no visible undershirt, and keep the front placket mostly buttoned with the upper neckline naturally open. Keep both sleeves rolled evenly to the forearms with clean folded cuffs; do not leave the sleeves fully extended. Preserve the pale cool powder-blue/light sky-blue color and smooth lightweight-to-medium-weight woven shirting fabric, with a fine subtle weave, matte surface, soft structure, natural vertical drape, and restrained wrinkles. On the wearer's left chest, reproduce the small dark navy/black embroidered equestrian polo-player emblem: a mounted rider on horseback holding a raised polo mallet. The emblem is a compact stitched embroidery directly on the shirt fabric, with no surrounding patch and no accompanying lettering. There is no visible textual wording on the garment, so add no text, slogans, typography, or additional graphics. Preserve the exact button placement, collar construction, rolled-sleeve position, curved hem, embroidery scale and chest placement, pale-blue color, fabric texture, seams, folds, drape, and overall proportions.",
     tags: [
       "standalone formal-casual shirt",
       "regular-fit Oxford cotton button-down",
@@ -112,8 +143,10 @@ const PRODUCTS: ProductItem[] = [
   },
   {
     id: "outfit-4",
-    title: "ست مینیمال پیراهن نخی سبز پسته‌ای پاستلی و شلوار جین واید سفید",
-    category: "ست مینیمال لوکس",
+    title:
+      "ست مینیمال پیراهن نخی سبز پسته‌ای پاستلی و شلوار پارچه‌ای آزاد سفید",
+    category:
+      "pastel lime-green embroidered button-down shirt + high-rise straight-leg white jeans",
     price: 4860000,
     priceFormatted: "۴,۸۶۰,۰۰۰",
     oldPrice: "۶,۰۴۰,۰۰۰",
@@ -122,6 +155,9 @@ const PRODUCTS: ProductItem[] = [
     reviewsCount: 51,
     sku: "SET-LIME-04",
     image: "/garments/garment-3.png",
+    fit: "relaxed regular fit",
+    promptDescription:
+      "Treat the outfit as two distinct garments: a pastel lime-green long-sleeve button-down shirt and high-rise white straight-leg five-pocket jeans. Preserve the shirt's relaxed regular silhouette, conventional shoulder construction, pointed spread/button-down-style collar, full front button placket, long sleeves, and gently curved shirttail hem. Keep the shirt visibly untucked and hanging freely over the waistband when worn; do not crop it or tuck it fully or partially. The shirt is styled with both sleeves rolled upward to the forearms, with substantial clean fabric folds forming soft rolled cuffs; keep the collar flat and naturally open at the neck rather than popped. Preserve the shirt as a pale yellow-green/lime pastel shade with a smooth, lightweight-to-medium-weight woven shirting fabric, soft matte finish, fine subtle weave, fluid natural drape, and gentle folds concentrated around the lower front, side seams, sleeves, and rolled cuffs. On the wearer's left chest, reproduce the small dark navy/black embroidered equestrian polo-player emblem, showing a mounted rider holding a raised mallet; render it as compact stitched embroidery directly into the fabric with no surrounding patch and no additional lettering. The inner neck label visibly contains the text 'LAUREN RALPH' in small dark lettering, with a smaller secondary line beneath it that is not sufficiently legible to reproduce confidently; treat this as a woven/printed garment label rather than exterior branding and do not invent the unreadable text. The jeans are clean solid white/off-white denim with a high-rise waistband, belt loops, button closure, zip fly, classic five-pocket construction, front rivets, roomy upper leg, and a straight relaxed leg continuing consistently from thigh to hem. Preserve the denim as medium-weight cotton denim with a smooth twill texture, structured but not rigid drape, minimal fading, and clean white coloration. Keep the jeans full length with straight hems; in a worn configuration, allow the hems to fall naturally toward the footwear with a clean slight break rather than cuffing, stacking heavily, or tucking into shoes. No footwear or accessories are present in the reference. Preserve the exact lime-green color, white denim tone, collar and button construction, sleeve-roll proportions, curved shirt hem, embroidered rider emblem, visible label placement, pocket architecture, waistband, seams, fabric texture, folds, and overall garment proportions without adding graphics, text, distressing, or accessories.",
     tags: [
       "2-piece minimalist outfit",
       "relaxed pastel pistachio green cotton shirt",
@@ -489,7 +525,14 @@ export default function ProductPage() {
         body: JSON.stringify({
           person_image_base64: userPhotoPreview,
           garment_url: selectedProduct.image,
-          garment_tags: selectedProduct.tags,
+          // Authoritative catalog inputs for buildVtonPrompt
+          category: selectedProduct.category ?? null,
+          fit: selectedProduct.fit ?? null,
+
+          description:
+            selectedProduct.promptDescription ??
+            selectedProduct.description ??
+            null,
         }),
       });
 
