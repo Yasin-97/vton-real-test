@@ -10,7 +10,7 @@ export const maxDuration = 120;
 
 const API_KEY =
   process.env.AVALAI_API_KEY ||
-  "aa-jcZePUO5NlMU73qp7fnWFyxPXgHnXRLBbdjNRd5oVNnSeHsEYeso";
+  "aa-jcZePUO5NlMU73qp7fnWFyxPXgHnXRLBbdjNRd5oVNnSeHsE";
 const CHAT_URL = "https://api.avalai.ir/v1/chat/completions";
 const EDITS_URL = "https://api.avalai.ir/v1/images/edits";
 const DAILY_LIMIT = 4;
