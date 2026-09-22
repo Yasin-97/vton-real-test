@@ -168,9 +168,9 @@ const PRODUCTS: ProductItem[] = [
     image: "/garments/garment-3.png",
     fit: "relaxed regular fit",
     promptDescription:
-      "A long-sleeve collared button-up shirt with a relaxed silhouette, pointed collar, curved bottom hem, and both sleeves neatly rolled up to the mid-forearm. A small embroidered equestrian rider emblem on the left chest." +
-      "Shirt Hem & Fit: The shirt is worn loose and untucked, draping down over the hips. The lower hem falls completely over the top of the jeans, concealing the entire waistband and top button beneath the fabric." +
-      "Pants: Classic straight-leg jeans emerging from underneath the shirt hem and continuing down in a clean, straight cut with finished hems resting naturally over footwear.",
+      "A relaxed long-sleeve button-up overshirt with a pointed collar, straight lower hem, and sleeves rolled up to the mid-forearm. Small embroidered equestrian logo on left chest." +
+      "Length & Silhouette: The shirt is long and worn as an outer layer, draping smoothly straight down over the torso to cover the pelvis and hips. The fabric forms an unbroken, solid drape that ends at the upper thighs." +
+      "Pants: Classic straight-leg denim jeans emerging below the shirt hem at the upper thigh level, continuing straight down into finished cuffs resting over footwear.",
     tags: [
       "2-piece minimalist outfit",
       "relaxed pastel pistachio green cotton shirt",
