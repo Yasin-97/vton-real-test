@@ -140,7 +140,7 @@ const PRODUCTS: ProductItem[] = [
     image: "/garments/garment-3.jpg",
     fit: "regular relaxed",
     promptDescription:
-      "The outfit consists of a single long-sleeve button-down shirt with a regular relaxed silhouette, button-down collar, full-length front button closure, long sleeves rolled to the forearms, and a gently curved lower hem. The shirt has a small embroidered polo-player emblem on the left chest. the shirt must be worn untucked as shown, No other garment layers are visible, and there is no legible garment text. the shirt must be worn untucked as shown. At the lower hem (applied only if feet/lower legs are visible in frame)... the shirt's curved hem should fall naturally over the upper hip area when worn untucked, with the side edges slightly higher than the center front and back; no footwear is visible in the reference.",
+      "The outfit consists of a single long-sleeve button-down shirt with a regular relaxed silhouette, button-down collar, full-length front button closure, long sleeves rolled to the forearms, and a gently curved lower hem. The shirt has a small embroidered polo-player emblem on the left chest. the shirt must be worn strictly untucked, hanging completely outside the jeans waistband as shown, No other garment layers are visible, and there is no legible garment text. the shirt must be worn untucked as shown. At the lower hem (applied only if feet/lower legs are visible in frame)... the shirt's curved hem should fall naturally over the upper hip area when worn untucked, with the side edges slightly higher than the center front and back; no footwear is visible in the reference.",
     tags: [
       "standalone formal-casual shirt",
       "regular-fit Oxford cotton button-down",
