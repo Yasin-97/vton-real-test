@@ -71,7 +71,17 @@ const PRODUCTS: ProductItem[] = [
     image: "/garments/garment-1.jpg",
     fit: "relaxed straight fit",
     promptDescription:
-      "The outfit consists of a relaxed button-front overshirt worn open over a crew-neck short-sleeve t-shirt, paired with relaxed straight-leg drawstring trousers. The overshirt has a pointed collar, front button closure, dropped/relaxed shoulder line, long sleeves rolled to the forearms, and a straight-to-gently curved lower hem; the t-shirt is worn untucked beneath it. The trousers have an elasticized waistband, external drawstring with metal-tipped ends, straight relaxed legs, and a clean uninterrupted front. The footwear consists of low-top lace-up sneakers with three-stripe side branding. The t-shirt is worn untucked over straight-leg trousers and hangs flat approximately 3 cm below the trousers waist, creating a short, controlled overlap rather than a long or oversized drape and the open overshirt extending slightly below the t-shirt hem. At the lower hem (applied only if feet/lower legs are visible in frame)... the trouser hems fall toward the footwear with a clean, relaxed break, while the sneakers sit naturally beneath the trouser legs. The overshirt remains visibly layered over the t-shirt, with the lower hems forming a subtle stepped overlap.",
+      "A layered casual outfit featuring an open button-front overshirt over a crew-neck short-sleeve t-shirt, paired with relaxed straight-leg trousers." +
+      "Fit, Layering & Hem Lengths (Strict):" +
+      "Both tops are strictly untucked, hanging completely outside and over the trousers waistband. Neither shirt is tucked in." +
+      "The crew-neck t-shirt hangs flat strictly 3 to 4 cm below the trousers waistband, ending at the upper hip." +
+      "The open overshirt hangs slightly longer, strictly 5 to 6 cm below the trousers waistband, visibly resting outside both the t-shirt and the trousers." +
+      "This creates a clean, short, stepped two-layer hemline at the upper hip. Neither layer is long, oversized, tunic-length, or tucked." +
+      "Garment Details:" +
+      "Overshirt: Relaxed silhouette, pointed collar, dropped shoulders, long sleeves neatly rolled to the forearms, worn fully unbuttoned and open." +
+      "T-shirt: Classic crew-neck, short sleeves, visible beneath the open front of the overshirt." +
+      "Trousers: Relaxed straight-leg trousers with an elasticized waistband and an external drawstring with metal-tipped ends visible at the center waist below the shirt neckline." +
+      "(If full body/feet are in frame): The trouser hems fall cleanly toward the footwear with a relaxed break, sitting naturally over low-top lace-up sneakers featuring three-stripe side branding.",
     tags: [
       "3-piece complete outfit",
       "open pastel lilac linen overshirt",
@@ -154,7 +164,10 @@ const PRODUCTS: ProductItem[] = [
     image: "/garments/garment-3.png",
     fit: "relaxed regular fit",
     promptDescription:
-      "A long-sleeve collared button-up shirt with a relaxed silhouette, front button closure, pointed collar, curved shirt hem, and both sleeves rolled to the forearm. The shirt is worn untucked over straight-leg jeans and hangs flat approximately 3 cm below the jeans waist, creating a short, controlled overlap rather than a long or oversized drape. The jeans have classic five-pocket construction, belt loops, front button closure, zip fly, and straight legs. A small embroidered equestrian-style rider emblem is visible on the shirt chest.\n\nAt the lower hem (applied only if feet/lower legs are visible in frame)... the jeans continue as straight legs with clean finished hems; preserve their natural relationship to any visible footwear without altering the trouser proportions.",
+      "A long-sleeve collared button-up shirt with a relaxed silhouette, front button closure, pointed collar, curved shirt hem, and both sleeves neatly rolled up to the mid-forearm. A small embroidered equestrian-style rider emblem is visible on the left chest." +
+      "Fit and Length: The shirt is strictly worn untucked, hanging completely outside and over the waistband of the jeans. The hem falls exactly 5 cm below the jeans waistband onto the high hip—creating a clean, short, controlled overlap. The shirt hem is expressly short and trimmed: it does NOT hang long, does NOT cover the pockets or fly, and is completely free of any tucking or billowing." +
+      "Pants: Classic straight-leg jeans with five-pocket construction, belt loops, front button closure, and zip fly, partially covered at the top only by the 5 cm shirt overhang." +
+      "(If full body/feet are in frame): The jeans continue down in a clean, straight cut with finished hems, resting naturally over footwear without altering the trouser proportions.",
     tags: [
       "2-piece minimalist outfit",
       "relaxed pastel pistachio green cotton shirt",
@@ -647,9 +660,6 @@ export default function ProductPage() {
           <div className="flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between text-[11px] text-zinc-500 mb-2">
-                <span className="bg-zinc-800/60 px-2 py-0.5 rounded text-zinc-400">
-                  {selectedProduct.category}
-                </span>
                 <div className="flex items-center gap-1 text-amber-400">
                   <Star className="w-3.5 h-3.5 fill-amber-400" />
                   <span className="font-bold text-zinc-200">
