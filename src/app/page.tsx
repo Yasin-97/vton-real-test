@@ -98,7 +98,7 @@ const PRODUCTS: ProductItem[] = [
   {
     id: "outfit-2",
     title: "ست استریت‌ویر تی‌شرت اورسایز آبی آسمانی و شلوار جین بگ زغالی",
-    category: "relaxed t-shirt + baggy jeans",
+    category: "relaxed t-shirt + baggy jeans + white low-top lace-up sneakers",
     price: 4520000,
     priceFormatted: "۴,۵۲۰,۰۰۰",
     oldPrice: "۵,۶۶۰,۰۰۰",
@@ -109,7 +109,7 @@ const PRODUCTS: ProductItem[] = [
     image: "/garments/garment-2.jpg",
     fit: "oversized relaxed",
     promptDescription:
-      "The outfit consists of a short-sleeve crew-neck t-shirt with a relaxed, slightly oversized silhouette, dropped shoulders, straight sleeve openings, and a straight lower hem worn untucked over loose, wide-leg jeans. The jeans have a standard button-and-zip fly, belt loops, classic five-pocket construction, and a roomy leg silhouette. The t-shirt has centered chest text reading 'RISE ABOVE'. There are no additional garment layers. At the lower hem (applied only if feet/lower legs are visible in frame)... the jeans extend to the tops of low-top lace-up sneakers with a natural relaxed break and slight stacking around the ankle area; the footwear remains fully visible beneath the trouser hems.",
+      "The outfit consists of a short-sleeve crew-neck t-shirt with a relaxed, slightly oversized silhouette, dropped shoulders, straight sleeve openings, and a straight lower hem worn untucked over loose, wide-leg jeans. The jeans have a standard button-and-zip fly, belt loops, classic five-pocket construction, and a roomy leg silhouette. The t-shirt has centered chest text reading 'RISE ABOVE'. There are no additional garment layers. At the lower hem (applied only if feet/lower legs are visible in frame)... the jeans extend to the tops of white low-top lace-up sneakers with a natural relaxed break and slight stacking around the ankle area; the footwear remains fully visible beneath the trouser hems.",
     tags: [
       "2-piece streetwear outfit",
       "drop-shoulder oversized sky blue graphic tee",
