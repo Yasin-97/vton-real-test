@@ -168,10 +168,9 @@ const PRODUCTS: ProductItem[] = [
     image: "/garments/garment-3.png",
     fit: "relaxed regular fit",
     promptDescription:
-      "A long-sleeve collared button-up shirt with a relaxed silhouette, front button closure, pointed collar, curved shirt hem, and both sleeves neatly rolled up to the mid-forearm. A small embroidered equestrian-style rider emblem is visible on the left chest." +
-      "Fit and Length: The shirt is strictly worn untucked, hanging completely outside and over the waistband of the jeans. The hem falls exactly 5 cm below the jeans waistband onto the high hip—creating a clean, short, controlled overlap. The shirt hem is expressly short and trimmed: it does NOT hang long, does NOT cover the pockets or fly, and is completely free of any tucking or billowing." +
-      "Pants: Classic straight-leg jeans with five-pocket construction, belt loops, front button closure, and zip fly, partially covered at the top only by the 5 cm shirt overhang." +
-      "(If full body/feet are in frame): The jeans continue down in a clean, straight cut with finished hems, resting naturally over footwear without altering the trouser proportions.",
+      "A long-sleeve collared button-up shirt with a relaxed silhouette, pointed collar, curved bottom hem, and both sleeves neatly rolled up to the mid-forearm. A small embroidered equestrian rider emblem on the left chest." +
+      "Shirt Hem & Fit: The shirt is worn loose and untucked, draping down over the hips. The lower hem falls completely over the top of the jeans, concealing the entire waistband and top button beneath the fabric." +
+      "Pants: Classic straight-leg jeans emerging from underneath the shirt hem and continuing down in a clean, straight cut with finished hems resting naturally over footwear.",
     tags: [
       "2-piece minimalist outfit",
       "relaxed pastel pistachio green cotton shirt",
