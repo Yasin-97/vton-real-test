@@ -109,7 +109,11 @@ const PRODUCTS: ProductItem[] = [
     image: "/garments/garment-2.jpg",
     fit: "oversized relaxed",
     promptDescription:
-      "The outfit consists of a short-sleeve crew-neck t-shirt with a relaxed, slightly oversized silhouette, dropped shoulders, straight sleeve openings, and a straight lower hem worn untucked over loose, wide-leg jeans. The jeans have a standard button-and-zip fly, belt loops, classic five-pocket construction, and a roomy leg silhouette. The t-shirt has centered chest text reading 'RISE ABOVE'. There are no additional garment layers. At the lower hem (applied only if feet/lower legs are visible in frame)... the jeans extend to the tops of white low-top lace-up sneakers with a natural relaxed break and slight stacking around the ankle area; the footwear remains fully visible beneath the trouser hems.",
+      "The outfit consists of a three-piece look: a t-shirt, jeans, and sneakers." +
+      "Top: A short-sleeve crew-neck t-shirt with a relaxed, slightly oversized silhouette, dropped shoulders, straight sleeve openings, and a straight lower hem worn untucked over the jeans. The t-shirt has centered chest text reading 'RISE ABOVE'." +
+      "Bottom: Loose, wide-leg jeans with a standard button-and-zip fly, belt loops, classic five-pocket construction, and a roomy leg silhouette." +
+      "Footwear (REPLACE ORIGINAL SHOES): If feet or lower legs are visible in Image 1, completely replace the person's existing footwear with clean white low-top lace-up sneakers featuring white laces and flat white rubber soles." +
+      "(Hem & shoe interaction): The jeans extend cleanly down to the tops of the new white sneakers with a natural relaxed break and slight stacking around the ankles; the new white sneakers remain fully visible beneath the trouser hems.",
     tags: [
       "2-piece streetwear outfit",
       "drop-shoulder oversized sky blue graphic tee",
