@@ -21,42 +21,42 @@ const MODELS_PRIORITY = [
   "gemini-3-pro-image",
 ];
 
-function buildVtonPrompt(garment: {
-  category?: string | null;
-  fit?: string | null;
-  description?: string | null;
-}): string {
-  const quickTags = [garment.category, garment.fit].filter(Boolean) as string[];
+interface GarmentDirectives {
+  pieces?: string; // e.g. "overshirt, straight-leg denim, boots"
+  fit?: string; // e.g. "relaxed loose top, classic straight bottom"
+  waistLayering?: string; // e.g. "shirt hem drapes outside over waistband to mid-hip"
+  styling?: string; // e.g. "sleeves rolled to mid-forearms, jeans stack over boots"
+  textGraphics?: string; // e.g. "white embroidered rider emblem on left chest"
+}
 
-  let catalogBlock = "";
-  if (garment.description || quickTags.length > 0) {
-    catalogBlock =
-      "AUTHORITATIVE CATALOG INFORMATION ABOUT IMAGE 2 — a human reviewer has already examined this garment photo and recorded what it actually shows. Trust this over your own visual read of Image 2 wherever the two would differ, since it may name details (exact brand text, precise colors, which individual pieces are present) that are hard to read directly from the photo. Image 2 may show a single standalone item (e.g. just a pair of pants) or a full multi-piece look (e.g. pants + shirt + shoes + a watch, each described separately below) - treat the catalog information as the definitive list of pieces and styling, EXCEPT when a piece or hem falls outside the camera crop of Image 1. Image 1's camera framing strictly OVERRIDES this catalog: any item described below that lies outside Image 1's visible framing (such as shoes or lower pant legs) must be completely IGNORED and discarded. ";
-    if (quickTags.length > 0)
-      catalogBlock += `Category/fit tags: [${quickTags.join("; ")}]. `;
-    if (garment.description)
-      catalogBlock += `Full description and any styling instructions (e.g. how pieces layer or tuck relative to each other): ${garment.description} `;
-  }
+function buildVtonPrompt(directives: GarmentDirectives): string {
+  // Format the directives into punchy, high-attention tags
+  const tags: string[] = [];
+  if (directives.pieces) tags.push(`ITEMS: [${directives.pieces}]`);
+  if (directives.fit) tags.push(`FIT: [${directives.fit}]`);
+  if (directives.waistLayering)
+    tags.push(`LAYERING: [${directives.waistLayering}]`);
+  if (directives.styling) tags.push(`STYLING: [${directives.styling}]`);
+  if (directives.textGraphics)
+    tags.push(`GRAPHICS: [${directives.textGraphics}]`);
+
+  const tagBlock = tags.length > 0 ? `STYLE TAGS: ${tags.join(" | ")}. ` : "";
 
   return (
-    "Act as a professional post-production retoucher for a fashion e-commerce studio performing a virtual garment try-on composite. " +
-    "You are given two images. Image 1 is a photograph of a real person — the identity and scene reference. Image 2 shows a garment or outfit on its own — the apparel reference only. " +
-    "Generate one new photograph of the exact person from Image 1, wearing the exact garment(s) from Image 2, as if photographed together in a single real photoshoot. Prioritize extreme photographic naturalness over stylization, with high pixel quality, razor-sharp focus — this must be indistinguishable from an unedited photo. " +
-    catalogBlock +
-    "CORE PRINCIPLE — treat Image 1 as ground truth for everything except the garment area(s) being replaced. Never invent, add, remove, smooth over, or guess at any physical detail — skin marks, body shape, proportions, texture, asymmetries — that isn't visible and verifiable in Image 1. If something is ambiguous or not visible in Image 1, render it plainly/neutrally rather than inventing detail. " +
-    "GARMENT SCOPE & STRICT CROP FILTERING — apply ONLY the pieces whose corresponding body parts are already physically visible in Image 1. If Image 1 is a close-up or chest shot, completely IGNORE all pants, bottoms, and footwear. If Image 1 cuts off at the waist, completely IGNORE all lower garments and shoes. If Image 1 cuts off at the knees, completely IGNORE all footwear, ankles, and lower hems. NEVER outpaint, extend, invent, or generate un-photographed body parts, and NEVER shrink, squish, or zoom out the subject to make off-frame items fit. If an item or hem falls outside the crop edge, let the frame cut it off naturally exactly as Image 1 does. Outside the visibly replaced garment region, every part of the person and scene must remain 100% untouched. " +
-    +"GARMENT SCOPE & STRICT CROP FILTERING — apply ONLY the pieces whose corresponding body parts are already physically visible in Image 1. Strictly preserve all frame boundaries (top, bottom, left, right). If Image 1 cuts off at the waist, chest, or mid-torso, completely IGNORE all lower garments and shoes. If the person is cropped laterally (e.g., half-body, one shoulder, arm cut off at the edge), DO NOT center them, shift them, or generate the missing side. NEVER outpaint, extend, invent, or generate un-photographed body parts, and NEVER shrink, squish, or zoom out the subject to make off-frame items fit. If an item, hem, or limb falls outside the crop edge, let the frame cut it off naturally exactly as Image 1 does. Outside the visibly replaced garment region, every part of the person and scene must remain 100% untouched. " +
-    "LAYERING AND POSITIONING — when multiple pieces are involved (e.g. a top and a bottom), follow any explicit layering/tucking/positioning instruction from the catalog information above first (such as a shirt going under or over another piece). Only when no such instruction is given, use the most natural, conventional way those pieces would actually be worn together. " +
-    "FIT AND SILHOUETTE — follow any fit/styling directive from the catalog information above first (loose, fitted, structured, flowy, how it sits relative to shoes, intentional wrinkling or folding, etc). Where no such directive is given, study how the garment sits in Image 2 instead: whether it is loose/oversized/relaxed, fitted/bodycon/second-skin, structured/tailored/stiff, or soft/flowy with fluid movement. Reproduce that exact fit character on the person's actual body — do not normalize a loose garment into a tight one or vice versa, and do not default to a generic 'flattering' fit. The garment should hang, cling, or structure itself on this specific body exactly the way its own fabric, cut, and any given instructions dictate, adjusted only for this person's proportions and pose. " +
-    "FABRIC PHYSICS — render drape, tension, and folds consistent with the fit above and the fabric type visible in Image 2 (denim, knit, silk, leather, linen, cotton, etc.), and any specific texture cues from the catalog information (e.g. deliberate wrinkles/folding where a garment meets shoes). Loose fabric should show soft gathering and gravity-driven folds; tight fabric should show tension lines and body-hugging contours; structured fabric should hold its own shape at collars/cuffs/hems rather than draping like soft fabric. Shadows and highlights on the garment must match Image 1's existing light source and direction exactly. " +
-    "IDENTITY LOCK — keep unchanged from Image 1: facial structure and expression, exact skin tone and texture, body shape, proportions and height, pose and posture, hand and finger position, hairstyle and hair color, and framing/crop. Do not beautify, slim, age, or idealize the person. " +
-    "SKIN VISIBILITY CHANGES — if the new garment's silhouette exposes skin that was covered in Image 1, render that skin plainly, matching tone and texture from the nearest visible skin on the same body part in Image 1 — do not add anything new to it. If the new garment covers skin that was visible in Image 1 (including any marks, tattoos, or accessories on it), simply let the garment cover it naturally; do not let covered details show through fabric. " +
-    "COLOR & DYE FIDELITY — sample exact fabric colors, dye shades, color saturation, and denim washes directly from the pixels of Image 2. Render colors accurately; do not shift, mute, or wash out any garment colors. " +
-    "ACCESSORY REPLACEMENT — only replace an accessory if Image 2 explicitly includes it AND that specific body part is already clearly in frame in Image 1 (e.g., do NOT render a watch if wrists/hands are outside the frame; do NOT render footwear if feet are outside the frame). Otherwise, change none. " +
-    "SCENE INTEGRITY — keep background, lighting direction and color temperature, camera angle, focal length, subject scale, camera distance, and framing 100% identical to Image 1. Do not zoom in and do not zoom out. This is a garment swap, not a new photoshoot. " +
-    "SOURCE CLEANUP — exclude anything from Image 2 that isn't the garment itself: hangers, mannequin parts, model's hands, price tags, brand stickers. " +
-    "OUTPUT — one crisp, sharp, high-pixel-quality photograph with vibrant clarity, same aspect ratio and resolution as Image 1, anatomically correct hands and limbs, no text/watermarks/collage panels, no visible compositing seams or blending artifacts. " +
-    "DO NOT: produce blurry, soft-focus, low-resolution, or washed-out images; generate, outpaint, or invent any body parts (legs, feet, shoes, hands) that are not already visible in Image 1; zoom in, zoom out, pull back, or enlarge/shrink the subject; compress the body or shorten the person to fit footwear; alter identity, body shape, proportions, or pose; add or remove any physical detail not visible in Image 1; apply a fit, layering, or drape that contradicts the catalog information; touch any body region or clothing item outside the garment's actual scope; change background or lighting; leave tags, hangers, or extraneous hands in frame; output more than one image or any text."
+    // 1. FRAME & CAMERA LOCK (Must be first to prevent zoom/aspect ratio drift)
+    "CANVAS & CAMERA LOCK: Strictly maintain 1:1 camera framing, distance, focal length, and subject scale from Image 1. Preserve Image 1's exact aspect ratio, resolution, and background environment. " +
+    // 2. CORE TASK & SCOPE
+    "TASK: Photorealistic try-on composite. Transfer all wearable garments and accessories from Image 2 onto the person in Image 1. Limit changes strictly to the clothing swap zone. " +
+    // 3. TARGETED PRESERVATION (Ground Truth)
+    "IDENTITY PRESERVATION: Keep unchanged from Image 1: facial features, expression, beard, tattoos, skin texture, body proportions, posture, hands, and surrounding objects. If a body part or accessory is outside the replacement zone, keep it pixel-identical to Image 1. " +
+    // 4. INJECTED STYLING TAGS
+    tagBlock +
+    // 5. FIT & FALLBACK DIRECTIVES (Affirmative rules)
+    "SILHOUETTE & FIT: Follow provided style tags first. When a tag is absent, reproduce the natural silhouette visible in Image 2 (preserve oversized drape as loose, and tailored cuts as structured). " +
+    // 6. COLOR & LIGHTING INTEGRATION
+    "COLOR & FABRIC FIDELITY: Sample fabric colors, dye washes, and graphic text directly from Image 2. Integrate fabrics seamlessly into Image 1's existing lighting direction and shadows. " +
+    // 7. SKIN COVERAGE & OCCLUSION
+    "SKIN TRANSITIONS: Garment fabrics are fully opaque, completely concealing covered skin and tattoos beneath them. Any newly exposed skin is rendered neutrally, matching the tone and texture of adjacent visible skin."
   );
 }
 
@@ -370,11 +370,20 @@ export async function POST(req: NextRequest) {
     stageStart = Date.now();
     const contentLengthHeader = req.headers.get("content-length");
     const body = await req.json();
+
     const {
       person_image_base64,
       garment_url,
-      category,
+      // New Tag Directives (camelCase & snake_case support)
+      pieces,
       fit,
+      waistLayering,
+      waist_layering,
+      styling,
+      textGraphics,
+      text_graphics,
+      // Legacy Fallbacks
+      category,
       description,
       garment_category,
       garment_fit,
@@ -404,12 +413,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate Custom Prompt with Catalog Info
-    const promptText = buildVtonPrompt({
-      category: category ?? garment_category ?? null,
-      fit: fit ?? garment_fit ?? null,
-      description: description ?? garment_description ?? null,
-    });
+    // Map payload to GarmentDirectives with backward compatibility
+    const directives: GarmentDirectives = {
+      pieces: pieces ?? category ?? garment_category ?? undefined,
+      fit: fit ?? garment_fit ?? undefined,
+      waistLayering: waistLayering ?? waist_layering ?? undefined,
+      styling: styling ?? description ?? garment_description ?? undefined,
+      textGraphics: textGraphics ?? text_graphics ?? undefined,
+    };
+
+    // Generate lightweight, tag-driven prompt
+    const promptText = buildVtonPrompt(directives);
 
     // Strictly normalize person image Base64
     stageStart = Date.now();
@@ -518,9 +532,7 @@ export async function POST(req: NextRequest) {
             resultUrl: `/api/media/session_${sessionId}_result.png`,
             modelUsed: model,
             userKey,
-            category: category ?? garment_category ?? null,
-            fit: fit ?? garment_fit ?? null,
-            description: description ?? garment_description ?? null,
+            directives, // Saves the exact structured tags used
             createdAt: new Date().toISOString(),
           };
 

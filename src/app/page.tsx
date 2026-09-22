@@ -18,28 +18,15 @@ import {
   Tag,
 } from "lucide-react";
 
-// interface ProductItem {
-//   id: string;
-//   title: string;
-//   category: string;
-//   fit?: string | null;
-//   price: number;
-//   tags: string[];
-//   priceFormatted: string;
-//   oldPrice: string;
-//   discount: string;
-//   rating: number;
-//   reviewsCount: number;
-//   sku: string;
-//   image: string;
-//   description: string;
-//   badge: string;
-// }
-
 interface ProductItem {
   id: string;
   title: string;
-  category: string;
+  pieces: string | null;
+  fit: string | null;
+  waistLayering: string | null;
+  styling: string | null;
+  textGraphics: string | null;
+
   price: number;
   priceFormatted: string;
   oldPrice?: string;
@@ -48,10 +35,8 @@ interface ProductItem {
   reviewsCount: number;
   sku: string;
   image: string;
-  tags: string[];
+
   description: string; // User-facing description (Persian)
-  fit: string; // For buildVtonPrompt (fit tag)
-  promptDescription: string; // Authoritative catalog description for buildVtonPrompt
   badge?: string;
 }
 
@@ -59,8 +44,6 @@ const PRODUCTS: ProductItem[] = [
   {
     id: "outfit-1",
     title: "ست ۳ تکه کژوال پیراهن لنین یاسی، تی‌شرت پنبه و شلوار کتان شیری",
-    category:
-      "open overshirt + crew-neck t-shirt + relaxed drawstring trousers + retro white sneakers",
     price: 5130000,
     priceFormatted: "۵,۱۳۰,۰۰۰",
     oldPrice: "۶,۳۸۰,۰۰۰",
@@ -69,28 +52,16 @@ const PRODUCTS: ProductItem[] = [
     reviewsCount: 68,
     sku: "SET-LILAC-01",
     image: "/garments/garment-1.jpg",
-    fit: "relaxed straight fit",
-    promptDescription:
-      "A layered casual outfit featuring an open button-front overshirt over a crew-neck short-sleeve t-shirt, paired with relaxed straight-leg trousers." +
-      "Fit, Layering & Hem Lengths (Strict):" +
-      "Both tops are strictly untucked, hanging completely outside and over the trousers waistband. Neither shirt is tucked in." +
-      "The crew-neck t-shirt hangs flat strictly 3 to 4 cm below the trousers waistband, ending at the upper hip." +
-      "The open overshirt hangs slightly longer, strictly 5 to 6 cm below the trousers waistband, visibly resting outside both the t-shirt and the trousers." +
-      "This creates a clean, short, stepped two-layer hemline at the upper hip. Neither layer is long, oversized, tunic-length, or tucked." +
-      "Garment Details:" +
-      "Overshirt: Relaxed silhouette, pointed collar, dropped shoulders, long sleeves neatly rolled to the forearms, worn fully unbuttoned and open." +
-      "T-shirt: Classic crew-neck, short sleeves, visible beneath the open front of the overshirt." +
-      "Trousers: Relaxed straight-leg trousers with an elasticized waistband and an external drawstring with metal-tipped ends visible at the center waist below the shirt neckline." +
-      "(If full body/feet are in frame): The trouser hems fall cleanly toward the footwear with a relaxed break, sitting naturally over low-top lace-up sneakers featuring three-stripe side branding.",
-    tags: [
-      "3-piece complete outfit",
-      "open pastel lilac linen overshirt",
-      "plain white inner crewneck t-shirt",
-      "relaxed cream linen drawstring trousers",
-      "rolled-up sleeves",
-      "untucked flowy drape",
-      "retro white sneakers",
-    ],
+
+    pieces:
+      "soft lavender textured long-sleeve button-up shirt, clean white crew-neck t-shirt, warm ivory relaxed straight-leg drawstring trousers, clean white low-top sneakers with subtle gray side stripes",
+    fit: "relaxed regular-fit button-up shirt with a gently loose body and straight silhouette, regular-fit crew-neck t-shirt, relaxed straight-leg trousers with a comfortable drape, low-profile casual sneakers",
+    waistLayering:
+      "lavender shirt hem drapes freely outside over the waistband down to the upper-thigh area, with the white t-shirt visible beneath the open shirt front and extending toward the upper-hip area",
+    styling:
+      "shirt worn open over the white crew-neck t-shirt with the front placket naturally separated, sleeves rolled neatly to the upper forearm, shirt hem hanging naturally with a gently curved lower edge, ivory trousers falling straight toward the ankle area, white sneakers positioned beneath the trouser hems",
+    textGraphics: null,
+
     description:
       "ست کژوال خنک شامل پیراهن لنین یاسی، زیرپیراهنی پنبه‌ای و شلوار کتان شیری با تن‌خور بسیار راحت.",
     badge: "پرفروش‌ترین فصل",
@@ -98,7 +69,11 @@ const PRODUCTS: ProductItem[] = [
   {
     id: "outfit-2",
     title: "ست استریت‌ویر تی‌شرت اورسایز آبی آسمانی و شلوار جین بگ زغالی",
-    category: "relaxed t-shirt + baggy jeans + white low-top lace-up sneakers",
+    pieces: null,
+    fit: null,
+    waistLayering: null,
+    styling: null,
+    textGraphics: null,
     price: 4520000,
     priceFormatted: "۴,۵۲۰,۰۰۰",
     oldPrice: "۵,۶۶۰,۰۰۰",
@@ -107,21 +82,7 @@ const PRODUCTS: ProductItem[] = [
     reviewsCount: 44,
     sku: "STR-BLUE-02",
     image: "/garments/garment-2.jpg",
-    fit: "oversized relaxed",
-    promptDescription:
-      "The outfit consists of a three-piece look: a t-shirt, jeans, and sneakers." +
-      "Top: A short-sleeve crew-neck t-shirt with a relaxed, slightly oversized silhouette, dropped shoulders, straight sleeve openings, and a straight lower hem worn untucked over the jeans. The t-shirt has centered chest text reading 'RISE ABOVE'." +
-      "Bottom: Loose, wide-leg jeans with a standard button-and-zip fly, belt loops, classic five-pocket construction, and a roomy leg silhouette." +
-      "Footwear (REPLACE ORIGINAL SHOES): If feet or lower legs are visible in Image 1, completely replace the person's existing footwear with clean white low-top lace-up sneakers featuring white laces and flat white rubber soles." +
-      "(Hem & shoe interaction): The jeans extend cleanly down to the tops of the new white sneakers with a natural relaxed break and slight stacking around the ankles; the new white sneakers remain fully visible beneath the trouser hems.",
-    tags: [
-      "2-piece streetwear outfit",
-      "drop-shoulder oversized sky blue graphic tee",
-      "heavyweight 280gsm cotton",
-      "washed charcoal baggy wide-leg denim jeans",
-      "untucked boxy silhouette",
-      "chunky white sneakers",
-    ],
+
     description:
       "استایل ترند لش با تی‌شرت ۲۸۰ گرم پنبه‌ای Rise Above به همراه جین بگ زغالی سنگ‌شور.",
     badge: "ترند اینستاگرام",
@@ -129,7 +90,11 @@ const PRODUCTS: ProductItem[] = [
   {
     id: "outfit-3",
     title: "پیراهن کلاسیک آکسفورد تمام پنبه آبی آسمانی (طرح پولو)",
-    category: "button-down shirt",
+    pieces: null,
+    fit: null,
+    waistLayering: null,
+    styling: null,
+    textGraphics: null,
     price: 3380000,
     priceFormatted: "۳,۳۸۰,۰۰۰",
     oldPrice: "۴,۲۵۰,۰۰۰",
@@ -138,18 +103,7 @@ const PRODUCTS: ProductItem[] = [
     reviewsCount: 92,
     sku: "SHIRT-OXF-03",
     image: "/garments/garment-3.jpg",
-    fit: "regular relaxed",
-    promptDescription:
-      "The outfit consists of a single long-sleeve button-down shirt with a regular relaxed silhouette, button-down collar, full-length front button closure, long sleeves rolled to the forearms, and a gently curved lower hem. The shirt has a small embroidered polo-player emblem on the left chest. the shirt must be worn strictly untucked, hanging completely outside the jeans waistband as shown, No other garment layers are visible, and there is no legible garment text. the shirt must be worn untucked as shown. At the lower hem (applied only if feet/lower legs are visible in frame)... the shirt's curved hem should fall naturally over the upper hip area when worn untucked, with the side edges slightly higher than the center front and back; no footwear is visible in the reference.",
-    tags: [
-      "standalone formal-casual shirt",
-      "regular-fit Oxford cotton button-down",
-      "sky blue color",
-      "rolled-up cuffs",
-      "unbuttoned collar",
-      "structured tailored fit",
-      "embroidered chest pony logo",
-    ],
+
     description:
       "پیراهن اداری و مجلسی با پارچه ۱۰۰٪ آکسفورد ضدچروک با لوگوی گلدوزی ظریف پولو.",
     badge: "اصالت پارچه",
@@ -157,7 +111,11 @@ const PRODUCTS: ProductItem[] = [
   {
     id: "outfit-4",
     title: "ست مینیمال پیراهن نخی سبز پسته‌ای پاستلی همراه شلوار جین واید سفید",
-    category: "button-up shirt + straight-leg jeans",
+    pieces: null,
+    fit: null,
+    waistLayering: null,
+    styling: null,
+    textGraphics: null,
     price: 4860000,
     priceFormatted: "۴,۸۶۰,۰۰۰",
     oldPrice: "۶,۰۴۰,۰۰۰",
@@ -166,16 +124,7 @@ const PRODUCTS: ProductItem[] = [
     reviewsCount: 51,
     sku: "SET-LIME-04",
     image: "/garments/garment-3.png",
-    fit: "relaxed regular fit",
-    promptDescription:
-      "Treat the outfit as two distinct garments: a pastel lime-green long-sleeve button-down shirt and high-rise white straight-leg five-pocket jeans. Keep the shirt in a true REGULAR fit: natural shoulder width, normal torso volume, and standard shirt proportions. Do NOT make the shirt oversized, excessively loose, elongated, or unusually tall. The shirt hem should sit only slightly below the waist when worn, approximately a few centimeters below the waistband, while still extending far enough to cover the jeans' front button and zipper/fly section and overlap slightly into the upper-mid hip. The shirt must remain completely untucked and hang naturally OVER the jeans; never tuck, half-tuck, crop, or expose the waistband button or zipper. Maintain a normal, proportionate shirt length rather than creating a long tunic-like silhouette. Preserve the pointed collar, centered front button placket, conventional shoulder construction, and curved shirttail hem. Fold BOTH sleeves upward neatly to the UPPER FOREARM, ending clearly above the wrist and around the upper-to-mid forearm; use a substantial, deliberate rolled/folded cuff rather than a small cuff at the wrist. Keep the collar flat and natural. Preserve the pale pastel yellow-green/lime color and lightweight-to-medium-weight smooth woven shirting fabric with a soft matte finish, subtle fine weave, natural fluid drape, and restrained wrinkles. On the wearer's left chest, preserve the small dark navy/black embroidered equestrian polo-player emblem showing a mounted rider holding a raised mallet, rendered as compact stitched embroidery directly into the fabric. The inner neck label contains visible text including 'LAUREN RALPH'; treat this only as an internal garment label and do not add exterior text. The jeans are clean white/off-white high-rise straight-leg denim with a conventional waistband, belt loops, button closure, zip fly, five-pocket construction, front rivets, and a relaxed straight leg. Keep the jeans underneath the shirt so the shirt conceals the button and zipper/fly area completely. Preserve the jeans' clean white medium-weight denim texture and structured but natural drape. The jeans extend to full-length straight hems and should fall naturally toward footwear without heavy stacking or cuffing. No footwear is present in the reference. Preserve the regular shirt proportions, slightly-below-waist hem placement, complete front fastening coverage, upper-forearm sleeve folds, pastel lime color, embroidery, fabric texture, seams, folds, and overall garment construction exactly.",
-    tags: [
-      "2-piece minimalist outfit",
-      "relaxed pastel pistachio green cotton shirt",
-      "clean crisp white wide-leg denim jeans",
-      "rolled-up sleeves",
-      "loose breathable cotton drape",
-    ],
+
     description:
       "ترکیب چشم‌نواز پیراهن سبک پاستلی سبز پسته‌ای با شلوار جین واید سفید یخچالی.",
     badge: "کالکشن جدید",
@@ -537,13 +486,6 @@ export default function ProductPage() {
           person_image_base64: userPhotoPreview,
           garment_url: selectedProduct.image,
           // Authoritative catalog inputs for buildVtonPrompt
-          category: selectedProduct.category ?? null,
-          fit: selectedProduct.fit ?? null,
-
-          description:
-            selectedProduct.promptDescription ??
-            selectedProduct.description ??
-            null,
         }),
       });
 
