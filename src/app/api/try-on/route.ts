@@ -21,16 +21,16 @@ const MODELS_PRIORITY = [
   "gemini-3-pro-image",
 ];
 
-interface GarmentDirectives {
-  pieces?: string; // e.g. "overshirt, straight-leg denim, boots"
-  fit?: string; // e.g. "relaxed loose top, classic straight bottom"
-  waistLayering?: string; // e.g. "shirt hem drapes outside over waistband to mid-hip"
-  styling?: string; // e.g. "sleeves rolled to mid-forearms, jeans stack over boots"
-  textGraphics?: string; // e.g. "white embroidered rider emblem on left chest"
+export interface GarmentDirectives {
+  pieces?: string | null;
+  fit?: string | null;
+  waistLayering?: string | null;
+  styling?: string | null;
+  textGraphics?: string | null;
 }
 
-function buildVtonPrompt(directives: GarmentDirectives): string {
-  // Format the directives into punchy, high-attention tags
+export function buildVtonPrompt(directives: GarmentDirectives): string {
+  // 1. Pack directives into concise, high-attention tags
   const tags: string[] = [];
   if (directives.pieces) tags.push(`ITEMS: [${directives.pieces}]`);
   if (directives.fit) tags.push(`FIT: [${directives.fit}]`);
@@ -40,23 +40,28 @@ function buildVtonPrompt(directives: GarmentDirectives): string {
   if (directives.textGraphics)
     tags.push(`GRAPHICS: [${directives.textGraphics}]`);
 
-  const tagBlock = tags.length > 0 ? `STYLE TAGS: ${tags.join(" | ")}. ` : "";
+  const tagBlock =
+    tags.length > 0 ? `STYLE DIRECTIVES: ${tags.join(" | ")}. ` : "";
 
   return (
-    // 1. FRAME & CAMERA LOCK (Must be first to prevent zoom/aspect ratio drift)
-    "CANVAS & CAMERA LOCK: Strictly maintain 1:1 camera framing, distance, focal length, and subject scale from Image 1. Preserve Image 1's exact aspect ratio, resolution, and background environment. " +
-    // 2. CORE TASK & SCOPE
-    "TASK: Photorealistic try-on composite. Transfer all wearable garments and accessories from Image 2 onto the person in Image 1. Limit changes strictly to the clothing swap zone. " +
-    // 3. TARGETED PRESERVATION (Ground Truth)
-    "IDENTITY PRESERVATION: Keep unchanged from Image 1: facial features, expression, beard, tattoos, skin texture, body proportions, posture, hands, and surrounding objects. If a body part or accessory is outside the replacement zone, keep it pixel-identical to Image 1. " +
-    // 4. INJECTED STYLING TAGS
+    // 2. CANVAS & CROP TERMINATION LOCK (First 30 words to prevent zooming & outpainting feet)
+    "CANVAS & EXACT CROP LOCK: Strictly preserve Image 1's exact camera distance, framing, resolution, and aspect ratio. " +
+    "ABSOLUTE BOUNDARY: If Image 1 cuts off at the shins, waist, or mid-body, clothing must terminate cleanly at that exact frame edge. " +
+    "Never outpaint, never extend the canvas, and never generate off-camera body parts, ankles, or footwear under any circumstances. " +
+    // 3. CORE TASK & GENERALIZED EXHAUSTIVE INVENTORY (Stops phantom undershirts & unprompted items)
+    "TASK & EXHAUSTIVE INVENTORY LOCK: Perform a photorealistic try-on composite. " +
+    "The items declared in STYLE DIRECTIVES represent the absolute, complete set of clothing to introduce. Render strictly and exclusively those listed pieces. " +
+    "Any body area not covered by a declared piece must show bare skin (matching Image 1) or retain Image 1's existing clothing. " +
+    "Never synthesize any undeclared garments, under-layers, or accessories. " +
+    // 4. IDENTITY & SCENE GROUND TRUTH
+    "IDENTITY & SCENE LOCK: Preserve 100% untouched from Image 1: facial identity, expression, beard, skin texture, body proportions, posture, hands, held objects, and background environment. " +
+    // 5. INJECTED STYLE TAGS
     tagBlock +
-    // 5. FIT & FALLBACK DIRECTIVES (Affirmative rules)
-    "SILHOUETTE & FIT: Follow provided style tags first. When a tag is absent, reproduce the natural silhouette visible in Image 2 (preserve oversized drape as loose, and tailored cuts as structured). " +
-    // 6. COLOR & LIGHTING INTEGRATION
-    "COLOR & FABRIC FIDELITY: Sample fabric colors, dye washes, and graphic text directly from Image 2. Integrate fabrics seamlessly into Image 1's existing lighting direction and shadows. " +
-    // 7. SKIN COVERAGE & OCCLUSION
-    "SKIN TRANSITIONS: Garment fabrics are fully opaque, completely concealing covered skin and tattoos beneath them. Any newly exposed skin is rendered neutrally, matching the tone and texture of adjacent visible skin."
+    // 6. AFFIRMATIVE WAISTLINE & DRAPE LOGIC (No "untucked" keyword)
+    "WAISTLINE & DRAPE: All top layers drape outside over the waistband down to the mid-hip. When multiple tops are declared, all layers drape freely over the trousers. " +
+    // 7. COLOR, TEXTURE & GRAPHICS FIDELITY
+    "COLOR & GRAPHICS: Sample exact fabric dye colors from Image 2, integrated into Image 1's lighting direction and shadows. " +
+    "Render all logos and transcribed text in bold, high-contrast, razor-sharp lettering with crisp edges that pop cleanly off the fabric."
   );
 }
 

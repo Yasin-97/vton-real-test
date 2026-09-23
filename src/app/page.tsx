@@ -59,7 +59,7 @@ const PRODUCTS: ProductItem[] = [
     waistLayering:
       "white t-shirt hem extends over the trouser waistband to high-hip; lavender open shirt extends lower to upper-thigh, clearly longer than the t-shirt",
     styling:
-      "shirt sleeves rolled to upper forearm; all garments smooth, straight, crisp and minimally creased; fabrics thick, substantial and fully opaque; clean natural drape and solid color coverage",
+      "shirt sleeves rolled to upper forearm; all garments smooth, straight, crisp and minimally creased; fabrics thick, substantial and fully opaque; clean natural drape and solid color coverage; both inner tee and overshirt drape down past the waistband",
     textGraphics: null,
 
     description:
@@ -77,7 +77,7 @@ const PRODUCTS: ProductItem[] = [
     styling:
       "short sleeves fall naturally around the upper arm, t-shirt hem has a soft curved drape at mid-hip, jeans fall over the shoes with a subtle smooth fold around the shoe collar",
     textGraphics:
-      "small centered-chest text reading 'RISE ABOVE' in clean white print",
+      "bold, high-contrast solid centered-chest text reading 'RISE ABOVE' in clean white print",
     price: 4520000,
     priceFormatted: "۴,۵۲۰,۰۰۰",
     oldPrice: "۵,۶۶۰,۰۰۰",
