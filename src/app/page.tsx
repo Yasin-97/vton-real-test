@@ -54,12 +54,12 @@ const PRODUCTS: ProductItem[] = [
     image: "/garments/garment-1.jpg",
 
     pieces:
-      "soft lavender textured long-sleeve button-up shirt, clean white crew-neck t-shirt, warm ivory relaxed straight-leg drawstring trousers, clean white low-top sneakers with subtle gray side stripes",
-    fit: "relaxed regular-fit button-up shirt with a gently loose body and straight silhouette, regular-fit crew-neck t-shirt, relaxed straight-leg trousers with a comfortable drape, low-profile casual sneakers",
+      "soft lavender open long-sleeve shirt, clean white crew-neck t-shirt, warm ivory straight-leg trousers, clean white low-top sneakers",
+    fit: "relaxed regular-fit shirt, regular-fit shorter t-shirt, relaxed straight-leg trousers",
     waistLayering:
-      "lavender shirt hem drapes freely outside over the waistband down to the upper-thigh area, with the white t-shirt visible beneath the open shirt front and extending toward the upper-hip area",
+      "white t-shirt hem extends over the trouser waistband to high-hip; lavender open shirt extends lower to upper-thigh, clearly longer than the t-shirt",
     styling:
-      "shirt worn open over the white crew-neck t-shirt with the front placket naturally separated, sleeves rolled neatly to the upper forearm, shirt hem hanging naturally with a gently curved lower edge, ivory trousers falling straight toward the ankle area, white sneakers positioned beneath the trouser hems",
+      "shirt sleeves rolled to upper forearm; all garments smooth, straight, crisp and minimally creased; fabrics thick, substantial and fully opaque; clean natural drape and solid color coverage",
     textGraphics: null,
 
     description:
@@ -69,11 +69,15 @@ const PRODUCTS: ProductItem[] = [
   {
     id: "outfit-2",
     title: "ست استریت‌ویر تی‌شرت اورسایز آبی آسمانی و شلوار جین بگ زغالی",
-    pieces: null,
-    fit: null,
-    waistLayering: null,
-    styling: null,
-    textGraphics: null,
+    pieces:
+      "light sky-blue short-sleeve crewneck t-shirt, washed charcoal wide-leg jeans, clean white low-top sneakers",
+    fit: "relaxed oversized boxy t-shirt with dropped shoulders, relaxed wide-leg jeans with a loose straight silhouette",
+    waistLayering:
+      "t-shirt lower hem drapes freely outside over the jeans down to the mid-hip, smoothly covering the top edge of the jeans",
+    styling:
+      "short sleeves fall naturally around the upper arm, t-shirt hem has a soft curved drape at mid-hip, jeans fall over the shoes with a subtle smooth fold around the shoe collar",
+    textGraphics:
+      "small centered-chest text reading 'RISE ABOVE' in clean white print",
     price: 4520000,
     priceFormatted: "۴,۵۲۰,۰۰۰",
     oldPrice: "۵,۶۶۰,۰۰۰",
@@ -90,11 +94,7 @@ const PRODUCTS: ProductItem[] = [
   {
     id: "outfit-3",
     title: "پیراهن کلاسیک آکسفورد تمام پنبه آبی آسمانی (طرح پولو)",
-    pieces: null,
-    fit: null,
-    waistLayering: null,
-    styling: null,
-    textGraphics: null,
+
     price: 3380000,
     priceFormatted: "۳,۳۸۰,۰۰۰",
     oldPrice: "۴,۲۵۰,۰۰۰",
@@ -103,7 +103,13 @@ const PRODUCTS: ProductItem[] = [
     reviewsCount: 92,
     sku: "SHIRT-OXF-03",
     image: "/garments/garment-3.jpg",
-
+    pieces: "light sky-blue long-sleeve button-down shirt",
+    fit: "classic regular fit with a clean, lightly relaxed silhouette",
+    waistLayering:
+      "shirt hem drapes freely outside over the trousers down to the mid-hip, smoothly covering the top edge of the trousers",
+    styling:
+      "long sleeves rolled neatly to the mid-forearm, button-down collar lying flat, curved lower hem falling naturally around the mid-hip",
+    textGraphics: null,
     description:
       "پیراهن اداری و مجلسی با پارچه ۱۰۰٪ آکسفورد ضدچروک با لوگوی گلدوزی ظریف پولو.",
     badge: "اصالت پارچه",
@@ -111,11 +117,15 @@ const PRODUCTS: ProductItem[] = [
   {
     id: "outfit-4",
     title: "ست مینیمال پیراهن نخی سبز پسته‌ای پاستلی همراه شلوار جین واید سفید",
-    pieces: null,
-    fit: null,
-    waistLayering: null,
-    styling: null,
-    textGraphics: null,
+    pieces:
+      "pale lime green long-sleeve button-down shirt, clean white straight-leg jeans",
+    fit: "relaxed regular-fit shirt with a softly curved hem, straight-leg jeans with a clean relaxed silhouette",
+    waistLayering:
+      "shirt lower hem drapes freely over the jeans down to the mid-hip, smoothly covering the upper portion of the jeans",
+    styling:
+      "shirt sleeves rolled neatly to the mid-forearm, collar lying flat, lower hem forming soft natural folds, jeans extending over the shoe collar with a smooth gentle fold",
+    textGraphics:
+      "small black embroidered polo horse-and-rider emblem on the left chest",
     price: 4860000,
     priceFormatted: "۴,۸۶۰,۰۰۰",
     oldPrice: "۶,۰۴۰,۰۰۰",
