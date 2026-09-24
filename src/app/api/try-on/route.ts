@@ -33,9 +33,11 @@ const VTON_BASE_PROMPT = `You are performing a virtual try-on edit. Image 1 is t
 
 PRESERVE FROM IMAGE 1, UNCHANGED: identity, face, and pose; body shape, proportions, skin tone, and texture; beard, hair, tattoos, and skin marks; accessories and objects not being replaced; background; lighting direction and color temperature; camera angle, focal length, and framing; output aspect ratio and resolution.
 
+FRAME LOCK: Image 1's crop and camera extent are fixed — work only within the body area that crop actually shows. When an item's usual placement, such as footwear with the lower body hidden behind a table or chair, falls outside that visible area, treat the item as fully handled by whatever portion of it is visible (or, if none of it is visible, as not part of this photo) and keep the rest of the frame exactly as Image 1 shows it, matching the original crop rather than widening it to fit the item in.
+
 REPLACEMENT SCOPE: replace only the body regions the new item(s) physically occupy. Keep every other region pixel-faithful to Image 1.
 
-COMPLETENESS: treat ITEMS as a checklist, not a menu — apply every item named in it, including footwear and accessories. An item is skipped only if a Style Directive explicitly says to keep the original for it; otherwise, whatever currently occupies that region in Image 1 is replaced. Footwear in particular must not be left as the person's original by default.
+COMPLETENESS: treat ITEMS as a checklist for the body regions Image 1's frame actually shows — apply each visible item, including footwear and accessories, within that visible area. An item is left as the original only if a Style Directive explicitly says so, or if FRAME LOCK places its region outside Image 1's visible extent.
 
 SHAPE SOURCE: take each replaced item's length, drape, cut, and volume entirely from Image 2 (or its Style Directive below). Image 1's original garment in that region is evidence for the body underneath it only — reproduce Image 2's shape even where it differs from what Image 1 shows.
 
@@ -49,7 +51,7 @@ GARMENT DEFAULTS (apply unless a Style Directive below says otherwise for that i
 
 STYLE DIRECTIVES below override these defaults for the items they name: ITEMS lists what to apply; FIT sets silhouette; LAYERING sets tucked-in or worn-open state; STYLING sets rolling, folding, break-over-shoe, and fastening; GRAPHICS gives exact brand text or logos to reproduce verbatim, never approximated.
 
-BEFORE FINALIZING, check the result against three things: coverage — every item named in ITEMS is present in the render and none has been left as the original; restraint — no garment or accessory has been added, swapped, or restyled beyond what Image 2 and the Style Directives actually specify; and the seven fidelity dimensions — silhouette, color, neckline and sleeve shape, decoration and structure, material texture, fine details, and logo or text. A result that looks realistic overall but is missing a listed item, includes an unrequested change, or drifts on any one of the seven, is not acceptable.`;
+BEFORE FINALIZING, check the result against four things: frame — the render stays fully within the body and scene area that Image 1's crop actually shows, with nothing invented beyond it; coverage — every item named in ITEMS that has a visible body region in Image 1 is present in the render, and none of those has been left as the original; restraint — no garment or accessory has been added, swapped, or restyled beyond what Image 2 and the Style Directives actually specify; and the seven fidelity dimensions — silhouette, color, neckline and sleeve shape, decoration and structure, material texture, fine details, and logo or text. A result that looks realistic overall but extends past the original frame, is missing a listed item, includes an unrequested change, or drifts on any one of the seven, is not acceptable.`;
 
 function buildVtonPrompt(directives: GarmentDirectives): string {
   // 1. Pack directives into concise, high-attention tags
