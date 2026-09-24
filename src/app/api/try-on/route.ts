@@ -29,6 +29,26 @@ export interface GarmentDirectives {
   textGraphics?: string | null;
 }
 
+const VTON_BASE_PROMPT = `You are performing a virtual try-on edit. Image 1 is the person. Image 2 is the garment or accessory reference. Render the person from Image 1 wearing the item(s) shown in Image 2.
+
+PRESERVE FROM IMAGE 1, UNCHANGED: identity, face, and pose; body shape, proportions, skin tone, and texture; beard, hair, tattoos, and skin marks; accessories and objects not being replaced; background; lighting direction and color temperature; camera angle, focal length, and framing; output aspect ratio and resolution.
+
+REPLACEMENT SCOPE: replace only the body regions the new item(s) physically occupy. Keep every other region pixel-faithful to Image 1.
+
+SHAPE SOURCE: take each replaced item's length, drape, cut, and volume entirely from Image 2 (or its Style Directive below). Image 1's original garment in that region is evidence for the body underneath it only — reproduce Image 2's shape even where it differs from what Image 1 shows.
+
+ACCESSORY MATCHING: compare accessories by type (watch, belt, glasses, jewelry, bag, hat, and so on), one type at a time. Replace a type only when Image 2 includes a new instance of it; otherwise keep the person's original for that type, untouched.
+
+EVIDENCE ONLY: render skin marks, body shape, proportions, texture, and asymmetry exactly as visible and verifiable in Image 1. Treat any ambiguous or unseen region as plain and natural rather than invented.
+
+COVERAGE BOUNDARIES: skin newly exposed by the new item should match tone and texture to the nearest visible skin on that same body part in Image 1. Skin, marks, or accessories newly covered should sit fully under opaque fabric. Give extra care to hems, cuffs, and hand or foot overlaps, where boundary errors are most common.
+
+GARMENT DEFAULTS (apply unless a Style Directive below says otherwise for that item): treat Image 2 as the full source of wearable items — tops, bottoms, outerwear, footwear, accessories — and fit each one onto the person. Match each item's exact color and pattern from Image 2, shaded photorealistically so folds, draping, and the scene's own light source shift highlight and shadow naturally across the fabric. Read the fit character from how the item sits in Image 2 — loose or oversized, relaxed, fitted or bodycon or second-skin, structured or tailored or stiff, or soft and flowy with fluid movement — and reproduce that same character on the person's actual body, as loose or as tight as shown.
+
+STYLE DIRECTIVES below override these defaults for the items they name: ITEMS lists what to apply; FIT sets silhouette; LAYERING sets tucked-in or worn-open state; STYLING sets rolling, folding, break-over-shoe, and fastening; GRAPHICS gives exact brand text or logos to reproduce verbatim, never approximated.
+
+BEFORE FINALIZING, check the result against seven fidelity dimensions: silhouette, color, neckline and sleeve shape, decoration and structure, material texture, fine details, and logo or text. A result that looks realistic overall but drifts on any one of these is not acceptable.`;
+
 export function buildVtonPrompt(directives: GarmentDirectives): string {
   // 1. Pack directives into concise, high-attention tags
   const tags: string[] = [];
@@ -41,28 +61,10 @@ export function buildVtonPrompt(directives: GarmentDirectives): string {
     tags.push(`GRAPHICS: [${directives.textGraphics}]`);
 
   const tagBlock =
-    tags.length > 0 ? `STYLE DIRECTIVES: ${tags.join(" | ")}. ` : "";
+    tags.length > 0 ? `\n\nSTYLE DIRECTIVES: ${tags.join(" | ")}.` : "";
 
-  return (
-    // 2. CANVAS & CROP TERMINATION LOCK (First 30 words to prevent zooming & outpainting feet)
-    "CANVAS & EXACT CROP LOCK: Strictly preserve Image 1's exact camera distance, framing, resolution, and aspect ratio. " +
-    "ABSOLUTE BOUNDARY: If Image 1 cuts off at the shins, waist, or mid-body, clothing must terminate cleanly at that exact frame edge. " +
-    "Never outpaint, never extend the canvas, and never generate off-camera body parts, ankles, or footwear under any circumstances. " +
-    // 3. CORE TASK & GENERALIZED EXHAUSTIVE INVENTORY (Stops phantom undershirts & unprompted items)
-    "TASK & EXHAUSTIVE INVENTORY LOCK: Perform a photorealistic try-on composite. " +
-    "The items declared in STYLE DIRECTIVES represent the absolute, complete set of clothing to introduce. Render strictly and exclusively those listed pieces. " +
-    "Any body area not covered by a declared piece must show bare skin (matching Image 1) or retain Image 1's existing clothing. " +
-    "Never synthesize any undeclared garments, under-layers, or accessories. " +
-    // 4. IDENTITY & SCENE GROUND TRUTH
-    "IDENTITY & SCENE LOCK: Preserve 100% untouched from Image 1: facial identity, expression, beard, skin texture, body proportions, posture, hands, held objects, and background environment. " +
-    // 5. INJECTED STYLE TAGS
-    tagBlock +
-    // 6. AFFIRMATIVE WAISTLINE & DRAPE LOGIC (No "untucked" keyword)
-    "WAISTLINE & DRAPE: All top layers drape outside over the waistband down to the mid-hip. When multiple tops are declared, all layers drape freely over the trousers. " +
-    // 7. COLOR, TEXTURE & GRAPHICS FIDELITY
-    "COLOR & GRAPHICS: Sample exact fabric dye colors from Image 2, integrated into Image 1's lighting direction and shadows. " +
-    "Render all logos and transcribed text in bold, high-contrast, razor-sharp lettering with crisp edges that pop cleanly off the fabric."
-  );
+  // 2. Base rules first (identity/scene/defaults), directives last for max attention
+  return VTON_BASE_PROMPT + tagBlock;
 }
 
 // ----------------- BASE64 SANITIZER & VALIDATOR -----------------
