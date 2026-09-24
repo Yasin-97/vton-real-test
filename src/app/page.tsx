@@ -57,9 +57,9 @@ const PRODUCTS: ProductItem[] = [
       "soft lavender open long-sleeve shirt, clean white crew-neck t-shirt, warm ivory straight-leg trousers, clean white low-top sneakers",
     fit: "relaxed regular-fit shirt, regular-fit shorter t-shirt, relaxed straight-leg trousers",
     waistLayering:
-      "white t-shirt hem extends to high-hip; lavender open shirt extends lower to upper-thigh, clearly longer than the t-shirt",
+      "t-shirt worn OUTSIDE and OVER the trouser waistband — untucked, never inside or hidden by the trousers; t-shirt hem ends at high-hip. Lavender open shirt drops only slightly past the t-shirt hem, about 2-3 inches lower, ending at low-hip; it must stop well short of the thigh, clearly shorter than thigh-length",
     styling:
-      "shirt sleeves rolled to upper forearm; all garments smooth, straight, crisp and minimally creased; fabrics thick, substantial and fully opaque; clean natural drape and solid color coverage; both inner tee and overshirt drape down past the waistband",
+      "shirt sleeves rolled to upper forearm; all garments smooth, straight, crisp and minimally creased; fabrics thick, substantial and fully opaque; clean natural drape and solid color coverage; t-shirt hem stays visible over the trouser waistband at all times, not tucked in; overshirt hem trails just below the t-shirt hem, not down to the thigh",
     textGraphics: null,
 
     description:
