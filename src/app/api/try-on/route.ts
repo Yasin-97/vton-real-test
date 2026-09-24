@@ -35,9 +35,11 @@ PRESERVE FROM IMAGE 1, UNCHANGED: identity, face, and pose; body shape, proporti
 
 REPLACEMENT SCOPE: replace only the body regions the new item(s) physically occupy. Keep every other region pixel-faithful to Image 1.
 
+COMPLETENESS: treat ITEMS as a checklist, not a menu — apply every item named in it, including footwear and accessories. An item is skipped only if a Style Directive explicitly says to keep the original for it; otherwise, whatever currently occupies that region in Image 1 is replaced. Footwear in particular must not be left as the person's original by default.
+
 SHAPE SOURCE: take each replaced item's length, drape, cut, and volume entirely from Image 2 (or its Style Directive below). Image 1's original garment in that region is evidence for the body underneath it only — reproduce Image 2's shape even where it differs from what Image 1 shows.
 
-ACCESSORY MATCHING: compare accessories by type (watch, belt, glasses, jewelry, bag, hat, and so on), one type at a time. Replace a type only when Image 2 includes a new instance of it; otherwise keep the person's original for that type, untouched.
+ACCESSORY MATCHING: compare accessories by type (watch, belt, glasses, jewelry, bag, hat, and so on), one type at a time, using only what Image 2 actually shows. Replace a type only when Image 2 contains a visible instance of it. When a type has no instance in Image 2, carry the person's original for that type over from Image 1 exactly as it is, even where a different piece would look more coordinated with the new outfit.
 
 EVIDENCE ONLY: render skin marks, body shape, proportions, texture, and asymmetry exactly as visible and verifiable in Image 1. Treat any ambiguous or unseen region as plain and natural rather than invented.
 
@@ -47,7 +49,7 @@ GARMENT DEFAULTS (apply unless a Style Directive below says otherwise for that i
 
 STYLE DIRECTIVES below override these defaults for the items they name: ITEMS lists what to apply; FIT sets silhouette; LAYERING sets tucked-in or worn-open state; STYLING sets rolling, folding, break-over-shoe, and fastening; GRAPHICS gives exact brand text or logos to reproduce verbatim, never approximated.
 
-BEFORE FINALIZING, check the result against seven fidelity dimensions: silhouette, color, neckline and sleeve shape, decoration and structure, material texture, fine details, and logo or text. A result that looks realistic overall but drifts on any one of these is not acceptable.`;
+BEFORE FINALIZING, check the result against three things: coverage — every item named in ITEMS is present in the render and none has been left as the original; restraint — no garment or accessory has been added, swapped, or restyled beyond what Image 2 and the Style Directives actually specify; and the seven fidelity dimensions — silhouette, color, neckline and sleeve shape, decoration and structure, material texture, fine details, and logo or text. A result that looks realistic overall but is missing a listed item, includes an unrequested change, or drifts on any one of the seven, is not acceptable.`;
 
 function buildVtonPrompt(directives: GarmentDirectives): string {
   // 1. Pack directives into concise, high-attention tags
