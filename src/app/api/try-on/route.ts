@@ -49,7 +49,7 @@ STYLE DIRECTIVES below override these defaults for the items they name: ITEMS li
 
 BEFORE FINALIZING, check the result against seven fidelity dimensions: silhouette, color, neckline and sleeve shape, decoration and structure, material texture, fine details, and logo or text. A result that looks realistic overall but drifts on any one of these is not acceptable.`;
 
-export function buildVtonPrompt(directives: GarmentDirectives): string {
+function buildVtonPrompt(directives: GarmentDirectives): string {
   // 1. Pack directives into concise, high-attention tags
   const tags: string[] = [];
   if (directives.pieces) tags.push(`ITEMS: [${directives.pieces}]`);
