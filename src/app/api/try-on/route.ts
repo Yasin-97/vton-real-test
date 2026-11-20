@@ -16,6 +16,7 @@ const EDITS_URL = "https://api.avalai.ir/v1/images/generations";
 const DAILY_LIMIT = 4;
 
 const MODELS_PRIORITY = [
+  "gpt-image-2.6-flare",
   "gpt-image-2",
   "gemini-3.1-flash-image",
   "gemini-3-pro-image",
