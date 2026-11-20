@@ -12,7 +12,7 @@ const API_KEY =
   process.env.AVALAI_API_KEY ||
   "aa-jcZePUO5NlMU73qp7fnWFyxPXgHnXRLBbdjNRd5oVNnSeHsEYeso";
 const CHAT_URL = "https://api.avalai.ir/v1/chat/completions";
-const EDITS_URL = "https://api.avalai.ir/v1/images/generations";
+const EDITS_URL = "https://api.avalai.ir/v1/images/edits";
 const DAILY_LIMIT = 4;
 
 const MODELS_PRIORITY = [
@@ -189,6 +189,13 @@ async function callModelApi(
   addLog(
     "INFO",
     `[${requestId}] 🚀 Calling AvalAI API with model [${model}]...`,
+  );
+
+  addLog(
+    "INFO",
+    `[${requestId}] 🔍 API ROUTING: Model=[${model}] | Endpoint=[${
+      model.startsWith("gemini") ? CHAT_URL : EDITS_URL
+    }] | Method=[POST]`,
   );
 
   if (model.startsWith("gemini")) {
