@@ -11,8 +11,8 @@ export const maxDuration = 120;
 const API_KEY =
   process.env.AVALAI_API_KEY ||
   "aa-jcZePUO5NlMU73qp7fnWFyxPXgHnXRLBbdjNRd5oVNnSeHsEYeso";
-const CHAT_URL = "https://api.avalai.ir/v1/chat/completions";
-const EDITS_URL = "https://api.avalai.ir/v1/images/edits";
+const CHAT_URL = "https://api.avalai.ir/v1/images/generations";
+const EDITS_URL = "https://api.avalai.ir/v1/images/generations";
 const DAILY_LIMIT = 4;
 
 const MODELS_PRIORITY = [
