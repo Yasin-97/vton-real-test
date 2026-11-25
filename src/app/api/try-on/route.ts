@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
 const API_KEY =
-  process.env.AVALAI_API_KEY ||
+  // process.env.AVALAI_API_KEY ||
   // "aa-jcZePUO5NlMU73qp7fnWFyxPXgHnXRLBbdjNRd5oVNnSeHsEYeso";
   "sk-nvGChJCsJnwsp5m9tnidBx1ONYxXxGWMASZNMPVWI5LqLxiF";
 const CHAT_URL = "https://api.gapgpt.ir/v1/chat/completions";

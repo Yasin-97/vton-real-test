@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const memory = process.memoryUsage();
   const apiKey =
-    process.env.AVALAI_API_KEY ||
+    // process.env.AVALAI_API_KEY ||
     // "aa-jcZePUO5NlMU73qp7fnWFyxPXgHnXRLBbdjNRd5oVNnSeHsE";
     "sk-nvGChJCsJnwsp5m9tnidBx1ONYxXxGWMASZNMPVWI5LqLxiF";
 
