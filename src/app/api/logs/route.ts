@@ -7,7 +7,8 @@ export async function GET() {
   const memory = process.memoryUsage();
   const apiKey =
     process.env.AVALAI_API_KEY ||
-    "aa-jcZePUO5NlMU73qp7fnWFyxPXgHnXRLBbdjNRd5oVNnSeHsE";
+    // "aa-jcZePUO5NlMU73qp7fnWFyxPXgHnXRLBbdjNRd5oVNnSeHsE";
+    "sk-nvGChJCsJnwsp5m9tnidBx1ONYxXxGWMASZNMPVWI5LqLxiF";
 
   // Test outgoing connection to AvalAI API from Darkube container
   let connectivityStatus = "UNKNOWN";
@@ -16,7 +17,7 @@ export async function GET() {
 
   const startTime = Date.now();
   try {
-    const testRes = await fetch("https://api.avalai.ir/v1/models", {
+    const testRes = await fetch("https://api.gapgpt.ir/v1/models", {
       headers: { Authorization: `Bearer ${apiKey}` },
       signal: AbortSignal.timeout(10000),
     });

@@ -10,9 +10,10 @@ export const maxDuration = 120;
 
 const API_KEY =
   process.env.AVALAI_API_KEY ||
-  "aa-jcZePUO5NlMU73qp7fnWFyxPXgHnXRLBbdjNRd5oVNnSeHsEYeso";
-const CHAT_URL = "https://api.avalai.ir/v1/chat/completions";
-const EDITS_URL = "https://api.avalai.ir/v1/images/edits";
+  // "aa-jcZePUO5NlMU73qp7fnWFyxPXgHnXRLBbdjNRd5oVNnSeHsEYeso";
+  "sk-nvGChJCsJnwsp5m9tnidBx1ONYxXxGWMASZNMPVWI5LqLxiF";
+const CHAT_URL = "https://api.gapgpt.ir/v1/chat/completions";
+const EDITS_URL = "https://api.gapgpt.ir/v1/images/edits";
 const DAILY_LIMIT = 4;
 
 const MODELS_PRIORITY = [
