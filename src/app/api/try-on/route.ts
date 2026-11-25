@@ -13,7 +13,8 @@ const API_KEY =
   // "aa-jcZePUO5NlMU73qp7fnWFyxPXgHnXRLBbdjNRd5oVNnSeHsEYeso";
   "sk-nvGChJCsJnwsp5m9tnidBx1ONYxXxGWMASZNMPVWI5LqLxiF";
 const CHAT_URL = "https://api.gapgpt.ir/v1/chat/completions";
-const EDITS_URL = "https://api.gapgpt.ir/v1/images/edits";
+const EDITS_URL = "https://api.gapgpt.ir/v1/images/generations";
+
 const DAILY_LIMIT = 4;
 
 const MODELS_PRIORITY = [
